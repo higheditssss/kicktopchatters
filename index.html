@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Chatters</title>
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#53fc18;--bg:#07090a;--card:#0d1010;--border:rgba(83,252,24,.10);
+  --text:#ccdccc;--muted:rgba(180,210,180,.42);
+  --gold:#FFD700;--silver:#b8c4cc;--bronze:#c87d3a;--red:#ff4d4d;--cyan:#00e5ff;
+}
+
+/* ── Theme Variants ── */
+body[data-theme="green"]{
+  --g:#53fc18;--bg:#07090a;--card:#0d1010;--border:rgba(83,252,24,.10);
+  --text:#ccdccc;--muted:rgba(180,210,180,.42);
+}
+body[data-theme="pink"]{
+  --g:#ff6bcd;--bg:#0a070a;--card:#120a10;--border:rgba(255,107,205,.10);
+  --text:#f0d5e8;--muted:rgba(240,180,220,.42);
+}
+body[data-theme="red"]{
+  --g:#ff4d4d;--bg:#0a0707;--card:#100a0a;--border:rgba(255,77,77,.10);
+  --text:#f0d5d5;--muted:rgba(240,180,180,.42);
+}
+body[data-theme="yellow"]{
+  --g:#ffd93d;--bg:#0a0a07;--card:#100f0a;--border:rgba(255,217,61,.10);
+  --text:#f0ecd5;--muted:rgba(240,230,180,.42);
+}
+body[data-theme="cyan"]{
+  --g:#00e5ff;--bg:#070a0b;--card:#0a0f11;--border:rgba(0,229,255,.10);
+  --text:#d5eff5;--muted:rgba(180,225,240,.42);
+}
+body[data-theme="purple"]{
+  --g:#c77dff;--bg:#0a0710;--card:#0f0a14;--border:rgba(199,125,255,.10);
+  --text:#ead5f5;--muted:rgba(220,180,240,.42);
+}
+body[data-theme="dark"]{
+  --g:#888;--bg:#000;--card:#0a0a0a;--border:rgba(255,255,255,.08);
+  --text:#c0c0c0;--muted:rgba(160,160,160,.42);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;--grid-opacity:.025;--glow-opacity:.06}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--g) 1px,transparent 1px),linear-gradient(90deg,var(--g) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;opacity:var(--grid-opacity)}
+body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:500px;background:radial-gradient(ellipse,var(--g) 0%,transparent 70%);pointer-events:none;z-index:0;opacity:var(--glow-opacity)}
+body[data-theme="dark"]::before{opacity:.015}
+body[data-theme="dark"]::after{opacity:.03}
+.wrap{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:0 20px 80px;opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,1,.36,1)}
+.wrap.show{opacity:1;transform:translateY(0)}
+
+/* ── Setup ── */
+#setup{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;opacity:1;transition:opacity .4s ease,visibility .4s}
+#setup.hiding{opacity:0;pointer-events:none}
+#setup.hidden{display:none}
+.setup-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:38px 40px;width:100%;max-width:400px;box-shadow:0 0 80px var(--border),0 30px 60px rgba(0,0,0,.5);position:relative;overflow:hidden;transform:translateY(0) scale(1);transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s ease}
+#setup.hiding .setup-card{transform:translateY(-30px) scale(.95);opacity:0}
+.setup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+.setup-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--g);letter-spacing:.06em;text-shadow:0 0 30px var(--g);margin-bottom:6px}
+.setup-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--g);box-shadow:0 0 0 3px var(--border)}
+#btn-go{width:100%;background:var(--g);color:#000;border:none;border-radius:9px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;cursor:pointer;transition:opacity .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 24px var(--g)}
+#btn-go:hover{opacity:.88} #btn-go:active{transform:scale(.98)} #btn-go:disabled{opacity:.5;cursor:not-allowed}
+#setup-err{margin-top:12px;font-size:13px;color:var(--red);text-align:center;min-height:18px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Header ── */
+header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);margin-bottom:26px}
+.header-left{display:flex;align-items:center;gap:14px}
+#ch-avatar{width:52px;height:52px;border-radius:50%;border:2px solid var(--border);object-fit:cover;display:none;flex-shrink:0}
+.header-titles h1{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;color:var(--g);letter-spacing:.04em;text-shadow:0 0 40px var(--g)}
+.header-titles .ch-name{font-size:13px;color:var(--muted);letter-spacing:.07em;margin-top:3px}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding-top:6px}
+#theme-selector{display:flex;gap:6px;align-items:center;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:20px}
+.theme-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.theme-btn:hover{transform:scale(1.15);border-color:rgba(255,255,255,.3)}
+.theme-btn.active{border-color:var(--g);box-shadow:0 0 12px var(--g)}
+.theme-btn[data-theme="green"]{background:linear-gradient(135deg,#53fc18,#3fc010)}
+.theme-btn[data-theme="pink"]{background:linear-gradient(135deg,#ff6bcd,#ff3eb5)}
+.theme-btn[data-theme="red"]{background:linear-gradient(135deg,#ff4d4d,#e63939)}
+.theme-btn[data-theme="yellow"]{background:linear-gradient(135deg,#ffd93d,#ffc600)}
+.theme-btn[data-theme="cyan"]{background:linear-gradient(135deg,#00e5ff,#00b8d4)}
+.theme-btn[data-theme="purple"]{background:linear-gradient(135deg,#c77dff,#9d4edd)}
+.theme-btn[data-theme="dark"]{background:linear-gradient(135deg,#333,#111)}
+#live-badge{display:none;align-items:center;gap:7px;background:rgba(255,77,77,.1);border:1px solid rgba(255,77,77,.3);border-radius:20px;padding:5px 14px 5px 10px;font-size:11px;font-weight:600;color:var(--red);letter-spacing:.1em;text-transform:uppercase}
+#live-badge .rdot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 9px var(--red);animation:pulse 1.4s ease-in-out infinite}
+#offline-badge{display:none;align-items:center;gap:7px;background:rgba(136,136,136,.1);border:1px solid rgba(136,136,136,.3);border-radius:20px;padding:5px 14px 5px 10px;font-size:11px;font-weight:600;color:#888;letter-spacing:.1em;text-transform:uppercase}
+#offline-badge .odot{width:8px;height:8px;border-radius:50%;background:#666}
+#live-title{display:none;font-size:11px;color:var(--muted);max-width:220px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#conn-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)}
+#conn-dot{width:7px;height:7px;border-radius:50%;background:#333;transition:background .4s}
+#conn-dot.live{background:var(--g);box-shadow:0 0 7px var(--g);animation:pulse 2s infinite}
+#conn-dot.error{background:var(--red);box-shadow:0 0 7px var(--red)}
+#conn-dot.waiting{background:#ffaa00}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes slideUp{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+
+/* ── Stats ── */
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.stat-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;flex:1;min-width:110px}
+.stat-chip .val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--g);line-height:1;letter-spacing:.03em}
+.stat-chip .lbl{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-top:3px}
+
+/* ── Dice button ── */
+#dice-btn-wrap{display:none;justify-content:center;margin-bottom:22px}
+#dice-btn{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#1a0a00,#2d1500);
+  border:1px solid rgba(255,165,0,.4);
+  border-radius:12px;padding:12px 28px;
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.1em;
+  color:#ff9f1c;cursor:pointer;
+  transition:all .2s;box-shadow:0 0 20px rgba(255,159,28,.1);
+}
+#dice-btn:hover{border-color:rgba(255,165,0,.8);box-shadow:0 0 30px rgba(255,159,28,.25);transform:translateY(-1px)}
+#dice-btn:active{transform:scale(.97)}
+#dice-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.dice-icon{font-size:24px;display:inline-block;transition:transform .15s}
+#dice-btn:hover .dice-icon{transform:rotate(20deg)}
+
+/* ── Board ── */
+#board{display:flex;flex-direction:column;gap:4px}
+#empty{text-align:center;padding:70px 20px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#empty .ico{font-size:44px;opacity:.35}
+.row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s;animation:rowIn .3s cubic-bezier(.22,1,.36,1) both}
+.row:hover{border-color:rgba(83,252,24,.2);transform:translateX(3px)}
+.row.r1{border-color:rgba(255,215,0,.22);background:rgba(255,215,0,.03)}
+.row.r2{border-color:rgba(184,196,204,.18)}
+.row.r3{border-color:rgba(200,125,58,.2);background:rgba(200,125,58,.02)}
+.row.r1::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);box-shadow:0 0 10px var(--gold);border-radius:10px 0 0 10px}
+.row.r2::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--silver);box-shadow:0 0 8px var(--silver);border-radius:10px 0 0 10px}
+.row.r3::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bronze);box-shadow:0 0 8px var(--bronze);border-radius:10px 0 0 10px}
+@keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.rank{font-family:'Bebas Neue',sans-serif;font-size:20px;width:34px;text-align:center;flex-shrink:0;line-height:1}
+.r1 .rank{color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.5)}
+.r2 .rank{color:var(--silver)} .r3 .rank{color:var(--bronze)} .rn .rank{color:rgba(200,225,200,.2)}
+.avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#000;object-fit:cover;border:2px solid transparent}
+.avatar.has-img{background:none;color:transparent}
+.avatar.mod-user{border-color:var(--g);box-shadow:0 0 8px rgba(83,252,24,.4)}
+.info{flex:1;min-width:0}
+.uname{font-size:15px;font-weight:600;color:#ddeedd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.mod-badge{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--g),#3fc010);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;color:#000;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 12px rgba(83,252,24,.5),0 2px 8px rgba(0,0,0,.3);flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.seventv-badge{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#00a8fc,#0084d4);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;color:#fff;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 12px rgba(0,168,252,.5),0 2px 8px rgba(0,0,0,.3);flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.badge-7tv-img{height:18px;width:auto;vertical-align:middle;margin:0 2px;display:inline-block;image-rendering:-webkit-optimize-contrast;flex-shrink:0}
+.bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:5px;overflow:hidden}
+.bar{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.crown{font-size:18px;flex-shrink:0;animation:crownBob 2s ease-in-out infinite}
+.crown.off{filter:grayscale(1);opacity:.25;animation:none}
+@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}
+.count{text-align:right;flex-shrink:0;min-width:52px}
+.count .num{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--g);display:block}
+.count .lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.divider{text-align:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,220,200,.15);padding:8px 0 4px;font-weight:600}
+
+/* ── Reset ── */
+#reset-wrap{display:none;justify-content:center;margin-top:32px}
+#btn-reset{background:transparent;border:1px solid rgba(255,77,77,.25);color:rgba(255,77,77,.55);border-radius:8px;padding:9px 22px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+#btn-reset:hover{border-color:var(--red);color:var(--red);background:rgba(255,77,77,.07)}
+
+/* ── Password Reset Modal ── */
+#password-modal{
+  position:fixed;inset:0;z-index:300;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.9);backdrop-filter:blur(10px);
+  padding:20px;
+}
+#password-modal.open{display:flex}
+#password-box{
+  background:var(--card);
+  border:1px solid rgba(255,77,77,.3);
+  border-radius:18px;
+  padding:32px 36px;
+  width:100%;max-width:420px;
+  box-shadow:0 0 80px rgba(255,77,77,.12),0 30px 60px rgba(0,0,0,.6);
+  position:relative;overflow:hidden;
+}
+#password-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+}
+#password-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;color:var(--red);
+  letter-spacing:.05em;margin-bottom:8px;
+  text-shadow:0 0 20px rgba(255,77,77,.3);
+}
+#password-desc{
+  font-size:13px;color:var(--muted);
+  line-height:1.6;margin-bottom:24px;
+}
+#password-input{
+  width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,77,77,.2);
+  border-radius:8px;padding:12px 16px;
+  color:#fff;font-family:'DM Mono',monospace;
+  font-size:16px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  margin-bottom:6px;
+}
+#password-input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(255,77,77,.1);
+}
+#password-hint{
+  font-size:11px;color:rgba(180,210,180,.35);
+  margin-bottom:20px;text-align:center;
+  line-height:1.5;
+}
+#password-hint a{
+  color:var(--g);text-decoration:none;
+  transition:opacity .2s;
+}
+#password-hint a:hover{opacity:.7}
+#password-buttons{
+  display:flex;gap:10px;
+}
+#password-confirm,#password-cancel{
+  flex:1;border:none;border-radius:8px;
+  padding:11px;font-family:'Bebas Neue',sans-serif;
+  font-size:18px;letter-spacing:.08em;
+  cursor:pointer;transition:all .2s;
+}
+#password-confirm{
+  background:var(--red);color:#fff;
+  box-shadow:0 4px 20px rgba(255,77,77,.25);
+}
+#password-confirm:hover{opacity:.85}
+#password-confirm:disabled{opacity:.4;cursor:not-allowed}
+#password-cancel{
+  background:rgba(255,255,255,.05);color:var(--muted);
+  border:1px solid rgba(255,255,255,.1);
+}
+#password-cancel:hover{background:rgba(255,255,255,.08)}
+#password-error{
+  font-size:12px;color:var(--red);
+  text-align:center;margin-top:12px;
+  min-height:16px;
+}
+
+
+/* ── User messages modal ── */
+#user-modal{
+  position:fixed;inset:0;z-index:250;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  padding:20px;
+}
+#user-modal.open{ display:flex; }
+#user-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  width:100%;max-width:520px;
+  max-height:85vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 0 80px var(--border),0 40px 80px rgba(0,0,0,.7);
+  position:relative;overflow:hidden;
+  transform:scale(.9) translateY(20px);opacity:0;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .3s ease;
+}
+#user-modal.open #user-box{transform:scale(1) translateY(0);opacity:1}
+#user-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+
+#user-header{
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+#user-header-avatar{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;color:#000;
+  flex-shrink:0;overflow:hidden;
+}
+#user-header-info{flex:1;min-width:0}
+#user-header-name{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  letter-spacing:.04em;line-height:1;
+}
+#user-header-stats{
+  font-size:11px;color:var(--muted);margin-top:3px;
+  font-family:'DM Mono',monospace;
+}
+#user-close{
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.5);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+#user-close:hover{background:rgba(255,77,77,.15);border-color:var(--red);color:var(--red)}
+
+#user-msgs-list{
+  flex:1;overflow-y:auto;padding:10px 0 10px;
+}
+.umsg{
+  padding:9px 22px;display:flex;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  align-items:flex-start;
+  animation:msgSlide .2s ease both;
+}
+.umsg:last-child{border-bottom:none}
+@keyframes msgSlide{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.umsg-time{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:rgba(180,210,180,.3);flex-shrink:0;margin-top:2px;
+  letter-spacing:.03em;
+}
+.umsg-text{font-size:13px;color:#d0e8d0;line-height:1.5;word-break:break-word}
+.umsg-text .emote{
+  height:24px;
+  width:auto;
+  vertical-align:middle;
+  margin:0 2px;
+  display:inline-block;
+  image-rendering:-webkit-optimize-contrast;
+}
+#user-empty-msgs{
+  text-align:center;padding:40px 20px;
+  color:var(--muted);font-size:13px;
+}
+
+/* row hover hint */
+.row{transition:border-color .25s,transform .25s,background .2s}
+.row:hover::after{
+  content:'ver mesaje →';position:absolute;right:12px;bottom:5px;
+  font-size:9px;letter-spacing:.08em;color:rgba(83,252,24,.35);
+  text-transform:uppercase;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DICE MODAL
+══════════════════════════════════════════════════════════ */
+#dice-modal{
+  position:fixed;inset:0;z-index:300;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0);
+  backdrop-filter:blur(0px);
+  transition:background .4s, backdrop-filter .4s;
+}
+#dice-modal.open{
+  display:flex;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(8px);
+}
+
+#modal-box{
+  background:#0a0e0a;
+  border:1px solid rgba(83,252,24,.25);
+  border-radius:20px;
+  padding:44px 50px 40px;
+  width:100%;max-width:480px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  transform:scale(.85);opacity:0;
+  transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease;
+  box-shadow:0 0 100px rgba(83,252,24,.08), 0 40px 80px rgba(0,0,0,.7);
+}
+#dice-modal.open #modal-box{transform:scale(1);opacity:1}
+
+#modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+
+#modal-title{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:36px;
+}
+
+/* ── 3D Dice ── */
+.dice-scene{
+  width:100px;height:100px;
+  perspective:500px;
+  margin:0 auto 40px;
+  cursor:pointer;
+}
+
+.dice-cube{
+  width:100px;height:100px;
+  position:relative;
+  transform-style:preserve-3d;
+  transform:rotateX(20deg) rotateY(30deg);
+  transition:transform 0.1s linear;
+}
+
+.dice-cube.spinning{
+  animation:diceRoll 0.15s linear infinite;
+}
+
+.dice-cube.landing{
+  transition:transform 1.4s cubic-bezier(.2,.8,.4,1);
+}
+
+@keyframes diceRoll{
+  0%  {transform:rotateX(0deg)   rotateY(0deg)   rotateZ(0deg)}
+  25% {transform:rotateX(90deg)  rotateY(180deg) rotateZ(90deg)}
+  50% {transform:rotateX(180deg) rotateY(90deg)  rotateZ(180deg)}
+  75% {transform:rotateX(270deg) rotateY(270deg) rotateZ(270deg)}
+  100%{transform:rotateX(360deg) rotateY(360deg) rotateZ(360deg)}
+}
+
+.face{
+  position:absolute;
+  width:100px;height:100px;
+  background:#0f1a0f;
+  border:2px solid rgba(83,252,24,.35);
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  backface-visibility:hidden;
+  box-shadow:inset 0 0 20px rgba(83,252,24,.05);
+}
+.face.front {transform:translateZ(50px)}
+.face.back  {transform:rotateY(180deg) translateZ(50px)}
+.face.right {transform:rotateY(90deg)  translateZ(50px)}
+.face.left  {transform:rotateY(-90deg) translateZ(50px)}
+.face.top   {transform:rotateX(90deg)  translateZ(50px)}
+.face.bottom{transform:rotateX(-90deg) translateZ(50px)}
+
+/* Dots layout */
+.dots{display:grid;width:72px;height:72px;gap:5px;padding:4px}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)}
+.face[data-face="1"] .dots{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;place-items:center}
+.face[data-face="2"] .dots{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.face[data-face="3"] .dots{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.face[data-face="4"] .dots{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.face[data-face="5"] .dots{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.face[data-face="6"] .dots{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+
+/* Winner reveal */
+#winner-section{display:none;animation:winnerPop .5s cubic-bezier(.22,1,.36,1)}
+@keyframes winnerPop{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+#winner-label{
+  font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.2em;
+  color:var(--muted);margin-bottom:10px;
+}
+
+#winner-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;line-height:1;
+  letter-spacing:.04em;
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(255,215,0,.5), 0 0 80px rgba(255,215,0,.2);
+  margin-bottom:6px;
+  word-break:break-all;
+}
+
+#winner-msgs{
+  font-family:'DM Mono',monospace;font-size:13px;
+  color:var(--muted);margin-bottom:28px;
+}
+
+.confetti-line{
+  display:flex;justify-content:center;gap:6px;font-size:22px;
+  margin-bottom:24px;animation:confettiWave 1s ease infinite alternate;
+}
+@keyframes confettiWave{from{letter-spacing:4px}to{letter-spacing:10px}}
+
+#roll-again-btn{
+  background:var(--g);color:#000;border:none;border-radius:9px;
+  padding:11px 30px;font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:.1em;cursor:pointer;transition:opacity .2s,transform .15s;
+  margin-right:10px;
+}
+#roll-again-btn:hover{opacity:.88} #roll-again-btn:active{transform:scale(.97)}
+
+#close-modal-btn{
+  background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.45);
+  border-radius:9px;padding:11px 22px;font-family:'DM Sans',sans-serif;
+  font-size:14px;cursor:pointer;transition:all .2s;
+}
+#close-modal-btn:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.8)}
+
+/* Glow ring during spin */
+.dice-scene.rolling::after{
+  content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(83,252,24,.18),transparent 70%);
+  animation:ringPulse .6s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+@keyframes ringPulse{from{opacity:.3;transform:translate(-50%,-50%) scale(.9)}to{opacity:1;transform:translate(-50%,-50%) scale(1.15)}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(83,252,24,.15);border-radius:2px}
+@media(max-width:520px){.header-titles h1{font-size:34px}.wrap{padding:0 14px 50px}.setup-card{padding:28px 22px}.stat-chip{min-width:90px}#winner-name{font-size:38px}#modal-box{padding:32px 24px 28px}}
+</style>
+</head>
+<body>
+<script>
+// Instant hide to prevent flicker - runs before page render
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('user') && params.get('session')){
+    document.write('<style>#setup{display:none!important}</style>');
+  }
+})();
+</script>
+
+<!-- ── Setup ── -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-logo">TOP CHATTERS</div>
+    <p class="setup-sub">Introdu username-ul canalului Kick și apasă Start.</p>
+    <div class="field">
+      <label>Username canal</label>
+      <input id="inp-user" type="text" placeholder="ex: highman" value="highman" autocomplete="off" spellcheck="false">
+    </div>
+    <button id="btn-go">START ⚡</button>
+    <div id="setup-err"></div>
+  </div>
+</div>
+
+<!-- ── Dice Modal ── -->
+<div id="dice-modal">
+  <div id="modal-box">
+    <div id="modal-title">🎲 Tragere la sorți</div>
+
+    <div class="dice-scene" id="dice-scene">
+      <div class="dice-cube" id="dice-cube">
+        <!-- 1 -->
+        <div class="face front" data-face="1">
+          <div class="dots" style="display:grid;place-items:center">
+            <div class="dot" style="grid-column:2;grid-row:2"></div>
+          </div>
+        </div>
+        <!-- 6 -->
+        <div class="face back" data-face="6">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+        <!-- 3 -->
+        <div class="face right" data-face="3">
+          <div class="dots" style="display:grid;place-items:center;width:72px;height:72px;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr">
+            <div class="dot" style="grid-column:3;grid-row:1"></div>
+            <div class="dot" style="grid-column:2;grid-row:2"></div>
+            <div class="dot" style="grid-column:1;grid-row:3"></div>
+          </div>
+        </div>
+        <!-- 4 -->
+        <div class="face left" data-face="4">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+        <!-- 2 -->
+        <div class="face top" data-face="2">
+          <div class="dots">
+            <div class="dot" style="grid-column:1;grid-row:1"></div>
+            <div class="dot" style="grid-column:2;grid-row:2"></div>
+          </div>
+        </div>
+        <!-- 5 -->
+        <div class="face bottom" data-face="5">
+          <div class="dots" style="display:grid;place-items:center;width:72px;height:72px;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr">
+            <div class="dot" style="grid-column:1;grid-row:1"></div>
+            <div class="dot" style="grid-column:3;grid-row:1"></div>
+            <div class="dot" style="grid-column:2;grid-row:2"></div>
+            <div class="dot" style="grid-column:1;grid-row:3"></div>
+            <div class="dot" style="grid-column:3;grid-row:3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="winner-section">
+      <div class="confetti-line">BAVOOO</div>
+      <div id="winner-label">CÂȘTIGĂTORUL ESTE</div>
+      <div id="winner-name">—</div>
+      <div id="winner-msgs">— mesaje totale</div>
+      <div>
+        <button id="roll-again-btn">🎲 Trage din nou</button>
+        <button id="close-modal-btn">Închide</button>
+      </div>
+    </div>
+
+    <div id="spin-hint" style="font-size:13px;color:var(--muted);margin-top:8px">
+      Apasă pe zar ca să tragi la sorți!
+    </div>
+  </div>
+</div>
+
+<!-- ── Password Reset Modal ── -->
+<div id="password-modal">
+  <div id="password-box">
+    <div id="password-title">🔒 RESETARE STATISTICI</div>
+    <div id="password-desc">
+      Această acțiune va șterge toate statisticile curente.<br>
+      Introdu parola pentru a continua:
+    </div>
+    <input type="password" id="password-input" placeholder="Introdu parola..." autocomplete="off">
+    <div id="password-hint">
+      Nu știi parola? Scrie pe Instagram la<br>
+      <a href="https://instagram.com/highman.edits" target="_blank">@highman.edits</a>
+    </div>
+    <div id="password-buttons">
+      <button id="password-cancel">Anulează</button>
+      <button id="password-confirm">Resetează</button>
+    </div>
+    <div id="password-error"></div>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div class="wrap">
+  <header>
+    <div class="header-left">
+      <img id="ch-avatar" src="" alt="avatar">
+      <div class="header-titles">
+        <h1>TOP CHATTERS</h1>
+        <div class="ch-name" id="ch-name"></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="theme-selector" title="Schimbă tema">
+        <div class="theme-btn active" data-theme="green"></div>
+        <div class="theme-btn" data-theme="pink"></div>
+        <div class="theme-btn" data-theme="red"></div>
+        <div class="theme-btn" data-theme="yellow"></div>
+        <div class="theme-btn" data-theme="cyan"></div>
+        <div class="theme-btn" data-theme="purple"></div>
+        <div class="theme-btn" data-theme="dark"></div>
+      </div>
+      <div id="live-badge"><div class="rdot"></div> LIVE</div>
+      <div id="offline-badge"><div class="odot"></div> OFFLINE</div>
+      <div id="live-title"></div>
+      <div id="conn-badge"><div id="conn-dot"></div><span id="conn-txt">se conectează...</span></div>
+    </div>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-chip"><div class="val" id="s-total">0</div><div class="lbl">Mesaje totale</div></div>
+    <div class="stat-chip"><div class="val" id="s-users">0</div><div class="lbl">Chatteri unici</div></div>
+    <div class="stat-chip"><div class="val" id="s-mpm">0</div><div class="lbl">Msg / minut</div></div>
+    <div class="stat-chip"><div class="val" id="s-viewers">—</div><div class="lbl">Viewers live</div></div>
+    <div class="stat-chip"><div class="val" id="s-peak">—</div><div class="lbl">Peak viewers</div></div>
+  </div>
+
+  <!-- Dice trigger button -->
+  <div id="dice-btn-wrap">
+    <button id="dice-btn">
+      <span class="dice-icon">🎲</span>
+      TRAGERE LA SORȚI
+    </button>
+  </div>
+
+  <div id="board">
+    <div id="empty"><div class="ico">💬</div><div>Așteptând mesaje din chat...</div></div>
+  </div>
+
+  <div id="reset-wrap">
+    <button id="btn-reset">🔄 Resetează statistici</button>
+  </div>
+</div>
+
+<!-- ── User Messages Modal ── -->
+<div id="user-modal">
+  <div id="user-box">
+    <div id="user-header">
+      <div id="user-header-avatar"></div>
+      <div id="user-header-info">
+        <div id="user-header-name"></div>
+        <div id="user-header-stats"></div>
+      </div>
+      <button id="user-close">✕</button>
+    </div>
+    <div id="user-msgs-list">
+      <div id="user-empty-msgs">Niciun mesaj salvat.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────
+const counts   = {};   // username → message count
+const messages = {};   // username → [{text, time}]
+const userMeta = {};   // username → {isMod, avatar}
+const emotesMap = {};  // emote name → emote data (7TV)
+const MAX_MSGS_PER_USER = 200;
+let totalMsgs=0,isLive=false,chatroomId=null,channelUser='',sessionId='';
+let pusher,chan,mpmBuf=[],renderTid=null;
+let peakViewers=0;
+const TOP=50;
+
+// Password obfuscation (Base64 + reverse)
+const RESET_PASS = atob('dGFjb2Ftb2Ft'.split('').reverse().join(''));
+
+// ══════════════════════════════════════════════════
+// 7TV EMOTE & PAINT INTEGRATION
+// ══════════════════════════════════════════════════
+async function load7TVEmotes(kickUsername) {
+  try {
+    // First, get Kick user ID
+    const kickRes = await fetch(`https://kick.com/api/v2/channels/${kickUsername}`);
+    if (!kickRes.ok) return;
+    const kickData = await kickRes.json();
+    const kickUserId = kickData?.user?.id;
+    
+    if (!kickUserId) return;
+    
+    // Then get 7TV emotes for this Kick user
+    const emoteRes = await fetch(`https://7tv.io/v3/users/kick/${kickUserId}`);
+    if (!emoteRes.ok) return;
+    const emoteData = await emoteRes.json();
+    
+    // Store emotes in map
+    const emoteSet = emoteData?.emote_set?.emotes || [];
+    emoteSet.forEach(emote => {
+      emotesMap[emote.name] = {
+        id: emote.id,
+        name: emote.name,
+        url: `https://cdn.7tv.app/emote/${emote.id}/1x.webp`,
+        url2x: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+        url4x: `https://cdn.7tv.app/emote/${emote.id}/4x.webp`
+      };
+    });
+    
+    console.log(`✓ ${emoteSet.length} emote 7TV încărcate pentru ${kickUsername}`);
+  } catch(e) {
+    console.warn('Nu s-au putut încărca emoticoanele 7TV:', e);
+  }
+}
+
+// Load 7TV paint (color) and badge for a specific user using GraphQL v4
+async function load7TVUserStyle(kickUsername) {
+  try {
+    const kickRes = await fetch(`https://kick.com/api/v2/channels/${kickUsername}`);
+    if (!kickRes.ok) return null;
+    const kickData = await kickRes.json();
+    const kickUserId = kickData?.user?.id;
+    
+    if (!kickUserId) return null;
+    
+    // Get 7TV user ID first
+    const userRes = await fetch(`https://7tv.io/v3/users/kick/${kickUserId}`);
+    if (!userRes.ok) return null;
+    const userData = await userRes.json();
+    const userId7TV = userData?.id;
+    
+    if (!userId7TV) return null;
+    
+    // Now query v4 GraphQL for style (paint + badge)
+    const graphqlQuery = {
+      query: `query GetUserStyle($id: Id!) {
+        users {
+          user(id: $id) {
+            style {
+              activePaint {
+                id
+                name
+                function
+                color
+                stops {
+                  at
+                  color
+                }
+              }
+              activeBadge {
+                id
+                name
+              }
+            }
+          }
+        }
+      }`,
+      variables: { id: userId7TV }
+    };
+    
+    const styleRes = await fetch('https://7tv.io/v4/gql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(graphqlQuery)
+    });
+    
+    if (!styleRes.ok) return null;
+    const styleData = await styleRes.json();
+    const style = styleData?.data?.users?.user?.style;
+    
+    if (!style) return null;
+    
+    const result = {
+      paint: null,
+      badge: null
+    };
+    
+    // Extract paint color
+    const paint = style.activePaint;
+    if (paint) {
+      let color = null;
+      
+      if (paint.function === 'LINEAR_GRADIENT' && paint.stops) {
+        color = paint.stops[0]?.color || null;
+      } else if (paint.color) {
+        color = paint.color;
+      }
+      
+      if (color) {
+        result.paint = '#' + color.toString(16).padStart(6, '0');
+      }
+    }
+    
+    // Extract badge
+    const badge = style.activeBadge;
+    if (badge?.id) {
+      result.badge = {
+        id: badge.id,
+        name: badge.name,
+        url: `https://cdn.7tv.app/badge/${badge.id}/1x.webp`,
+        url2x: `https://cdn.7tv.app/badge/${badge.id}/2x.webp`,
+        url4x: `https://cdn.7tv.app/badge/${badge.id}/4x.webp`
+      };
+    }
+    
+    if (result.paint || result.badge) {
+      console.log(`✓ 7TV Style pentru ${kickUsername}:`, result);
+      return result;
+    }
+    
+    return null;
+  } catch(e) {
+    console.warn('Nu s-a putut încărca style-ul 7TV pentru', kickUsername, ':', e);
+    return null;
+  }
+}
+
+// Load Kick native emotes
+async function loadKickEmotes() {
+  try {
+    // Kick has global emotes available at their API
+    const res = await fetch('https://emotes.kick.com/emotes');
+    if (!res.ok) return;
+    const emotes = await res.json();
+    
+    // Store Kick emotes in the same emotesMap
+    emotes.forEach(emote => {
+      emotesMap[emote.name] = {
+        id: emote.id,
+        name: emote.name,
+        url: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+        url2x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+        url4x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+        isKick: true
+      };
+    });
+    
+    console.log(`✓ ${emotes.length} emote Kick încărcate`);
+  } catch(e) {
+    console.warn('Nu s-au putut încărca emoticoanele Kick:', e);
+  }
+}
+
+function parseEmotes(text) {
+  if (!text) return text;
+  
+  // Split by spaces and process each word
+  const words = text.split(' ');
+  return words.map(word => {
+    // Check if this word is an emote
+    if (emotesMap[word]) {
+      const emote = emotesMap[word];
+      return `<img class="emote" src="${emote.url}" srcset="${emote.url2x} 2x, ${emote.url4x} 4x" alt="${emote.name}" title="${emote.name}">`;
+    }
+    return esc(word);
+  }).join(' ');
+}
+
+// ── DOM ────────────────────────────────────────────
+const boardEl   = document.getElementById('board');
+const emptyEl   = document.getElementById('empty');
+const connDot   = document.getElementById('conn-dot');
+const connTxt   = document.getElementById('conn-txt');
+const liveBadge = document.getElementById('live-badge');
+const btnGo     = document.getElementById('btn-go');
+const errEl     = document.getElementById('setup-err');
+
+// ══════════════════════════════════════════════════
+// THEME SYSTEM
+// ══════════════════════════════════════════════════
+const THEME_KEY = 'topChattersTheme';
+const defaultTheme = 'green';
+
+// Load saved theme or use default
+function loadTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || defaultTheme;
+  setTheme(saved, false);
+}
+
+function setTheme(themeName, save = true) {
+  document.body.setAttribute('data-theme', themeName);
+  
+  // Update active button
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    if (btn.getAttribute('data-theme') === themeName) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
+  // Update glow colors dynamically
+  const themeColors = {
+    green: 'rgba(83,252,24,',
+    pink: 'rgba(255,107,205,',
+    red: 'rgba(255,77,77,',
+    yellow: 'rgba(255,217,61,',
+    cyan: 'rgba(0,229,255,',
+    purple: 'rgba(199,125,255,',
+    dark: 'rgba(136,136,136,'
+  };
+  
+  const color = themeColors[themeName];
+  const gridColor = color + '.025)';
+  const glowColor = color + '.06)';
+  
+  // Update grid pattern
+  document.body.style.setProperty('--grid-color', gridColor);
+  
+  if (save) {
+    localStorage.setItem(THEME_KEY, themeName);
+  }
+}
+
+// Initialize theme on load
+loadTheme();
+
+// Add click handlers to theme buttons
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const theme = btn.getAttribute('data-theme');
+    setTheme(theme);
+  });
+});
+
+// ══════════════════════════════════════════════════
+// PERSISTENCE & SESSION MANAGEMENT
+// ══════════════════════════════════════════════════
+function generateSessionId() {
+  return Math.random().toString(36).substring(2, 15) + 
+         Math.random().toString(36).substring(2, 15);
+}
+
+function getStorageKey(key) {
+  return `topChatters_${channelUser}_${sessionId}_${key}`;
+}
+
+function saveState() {
+  if (!channelUser || !sessionId) return;
+  try {
+    localStorage.setItem(getStorageKey('counts'), JSON.stringify(counts));
+    localStorage.setItem(getStorageKey('messages'), JSON.stringify(messages));
+    localStorage.setItem(getStorageKey('userMeta'), JSON.stringify(userMeta));
+    localStorage.setItem(getStorageKey('totalMsgs'), totalMsgs.toString());
+    localStorage.setItem(getStorageKey('peakViewers'), peakViewers.toString());
+    localStorage.setItem(getStorageKey('timestamp'), Date.now().toString());
+  } catch(e) {
+    console.warn('Failed to save state:', e);
+  }
+}
+
+function loadState() {
+  if (!channelUser || !sessionId) return false;
+  try {
+    const savedCounts = localStorage.getItem(getStorageKey('counts'));
+    const savedMessages = localStorage.getItem(getStorageKey('messages'));
+    const savedUserMeta = localStorage.getItem(getStorageKey('userMeta'));
+    const savedTotal = localStorage.getItem(getStorageKey('totalMsgs'));
+    const savedPeak = localStorage.getItem(getStorageKey('peakViewers'));
+    const timestamp = localStorage.getItem(getStorageKey('timestamp'));
+    
+    // Check if saved data is less than 24 hours old
+    if (timestamp && (Date.now() - parseInt(timestamp)) > 24 * 60 * 60 * 1000) {
+      clearState();
+      return false;
+    }
+    
+    if (savedCounts) {
+      Object.assign(counts, JSON.parse(savedCounts));
+      
+      // Deserialize messages and restore Date objects
+      const parsedMessages = JSON.parse(savedMessages || '{}');
+      for (const [username, msgs] of Object.entries(parsedMessages)) {
+        messages[username] = msgs.map(msg => ({
+          text: msg.text,
+          time: new Date(msg.time)  // Convert string back to Date
+        }));
+      }
+      
+      Object.assign(userMeta, JSON.parse(savedUserMeta || '{}'));
+      totalMsgs = parseInt(savedTotal || '0');
+      peakViewers = parseInt(savedPeak || '0');
+      
+      document.getElementById('s-total').textContent = totalMsgs.toLocaleString();
+      document.getElementById('s-users').textContent = Object.keys(counts).length;
+      document.getElementById('s-peak').textContent = peakViewers.toLocaleString();
+      
+      renderBoard();
+      return true;
+    }
+  } catch(e) {
+    console.warn('Failed to load state:', e);
+  }
+  return false;
+}
+
+function clearState() {
+  if (!channelUser || !sessionId) return;
+  try {
+    localStorage.removeItem(getStorageKey('counts'));
+    localStorage.removeItem(getStorageKey('messages'));
+    localStorage.removeItem(getStorageKey('userMeta'));
+    localStorage.removeItem(getStorageKey('totalMsgs'));
+    localStorage.removeItem(getStorageKey('peakViewers'));
+    localStorage.removeItem(getStorageKey('timestamp'));
+  } catch(e) {
+    console.warn('Failed to clear state:', e);
+  }
+}
+
+function updateURL() {
+  const newUrl = `${window.location.pathname}?user=${channelUser}&session=${sessionId}`;
+  window.history.replaceState({}, '', newUrl);
+}
+
+// Auto-save every 10 seconds
+setInterval(saveState, 10000);
+
+// Save on page unload
+window.addEventListener('beforeunload', saveState);
+
+// Check URL parameters on load
+const urlParams = new URLSearchParams(window.location.search);
+const urlUser = urlParams.get('user');
+const urlSession = urlParams.get('session');
+
+// Hide setup immediately if we have session params (prevent flicker)
+if (urlUser && urlSession) {
+  const setupEl = document.getElementById('setup');
+  setupEl.style.display = 'none';
+  document.getElementById('inp-user').value = urlUser;
+  sessionId = urlSession;
+  
+  // Auto-start after DOM is fully loaded
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      btnGo.click();
+    }, 100);
+  });
+}
+
+
+// ── Setup ──────────────────────────────────────────
+document.getElementById('inp-user').addEventListener('keydown', e => {
+  if (e.key==='Enter') btnGo.click();
+});
+
+btnGo.addEventListener('click', async () => {
+  const user = document.getElementById('inp-user').value.trim().toLowerCase();
+  if (!user) { showErr('Introdu un username valid.'); return; }
+  channelUser=user;
+  
+  // Generate or use existing session ID
+  if (!sessionId) {
+    sessionId = generateSessionId();
+  }
+  
+  errEl.textContent='';
+  btnGo.disabled=true;
+  btnGo.innerHTML='<span class="spinner"></span> Se încarcă...';
+
+  try {
+    const data = await getChannelInfo(user);
+    chatroomId=data.chatroomId; isLive=data.isLive;
+
+    document.getElementById('ch-name').textContent='@'+user;
+    if (data.avatar){
+      const img=document.getElementById('ch-avatar');
+      img.src=data.avatar; img.style.display='block';
+    }
+    
+    // Smooth animated transition from setup to app
+    const setupEl = document.getElementById('setup');
+    const wrapEl = document.querySelector('.wrap');
+    
+    setupEl.classList.add('hiding');
+    setTimeout(() => {
+      setupEl.classList.add('hidden');
+      setupEl.classList.remove('hiding');
+      document.getElementById('reset-wrap').style.display='flex';
+      document.getElementById('dice-btn-wrap').style.display='flex';
+      // Trigger fade-in animation for main app
+      setTimeout(() => wrapEl.classList.add('show'), 50);
+    }, 400);
+    
+    document.title='Top Chatters — '+user;
+
+    // Update URL with session
+    updateURL();
+    
+    // Try to load saved state
+    const loaded = loadState();
+    if (loaded) {
+      console.log('✓ Stare încărcată din sesiune anterioară');
+    }
+
+    // Load emotes (7TV + Kick)
+    load7TVEmotes(user);
+    loadKickEmotes();
+
+    updateLiveUI(data);
+    startPusher();
+
+    setInterval(async () => {
+      try {
+        const d=await getChannelInfo(user);
+        isLive=d.isLive;
+        updateLiveUI(d);
+      } catch(_){}
+    }, 60000);
+
+    setInterval(updateMpm, 10000);
+
+  } catch(e) {
+    btnGo.disabled=false;
+    btnGo.innerHTML='START ⚡';
+    showErr(e.message);
+  }
+});
+
+async function getChannelInfo(user) {
+  const res=await fetch('/api/channel?user='+encodeURIComponent(user));
+  const json=await res.json();
+  if (!res.ok||json.error) throw new Error(json.error||'Canal negăsit.');
+  return json;
+}
+
+function updateLiveUI(data) {
+  const offlineBadge = document.getElementById('offline-badge');
+  
+  liveBadge.style.display=data.isLive?'flex':'none';
+  offlineBadge.style.display=data.isLive?'none':'flex';
+  
+  const lt=document.getElementById('live-title');
+  if (data.isLive&&data.title){ lt.textContent='📺 '+data.title; lt.style.display='block'; }
+  else lt.style.display='none';
+  
+  const currentViewers = data.viewers||0;
+  document.getElementById('s-viewers').textContent=data.isLive?currentViewers.toLocaleString():'—';
+  
+  // Update peak viewers
+  if (data.isLive && currentViewers > peakViewers) {
+    peakViewers = currentViewers;
+    document.getElementById('s-peak').textContent=peakViewers.toLocaleString();
+    saveState();
+  }
+  
+  renderBoard();
+}
+
+// ── Pusher ─────────────────────────────────────────
+function startPusher() {
+  Pusher.logToConsole=false;
+  pusher=new Pusher('32cbd69e4b950bf97679',{cluster:'us2',forceTLS:true});
+
+  pusher.connection.bind('connected',   ()=>setConn('live','conectat'));
+  pusher.connection.bind('disconnected',()=>setConn('error','deconectat'));
+  pusher.connection.bind('error',       ()=>setConn('error','eroare conexiune'));
+  pusher.connection.bind('connecting',  ()=>setConn('waiting','conectare...'));
+
+  const chV2=pusher.subscribe('chatrooms.'+chatroomId+'.v2');
+  const chV1=pusher.subscribe('chatrooms.'+chatroomId);
+
+  function processMsg(data) {
+    // Don't process messages when offline
+    if (!isLive) return;
+    
+    if (typeof data==='string') { try{ data=JSON.parse(data); }catch(e){ return; } }
+    const sender=data?.sender||data?.user||data?.chatter||{};
+    const username=sender?.username||data?.username||null;
+    const content =data?.content||data?.message||data?.text||'';
+    if (!username) return;
+    
+    // Store user metadata (moderator status, avatar, and 7TV paint)
+    if (!userMeta[username]) {
+      userMeta[username] = {
+        isMod: false,
+        avatar: null,
+        paint7TV: null,  // 7TV subscriber color
+        badge7TV: null,  // 7TV badge
+        kickEmotes: []   // Kick emotes used
+      };
+      
+      // Load 7TV style (paint + badge) for this user (async, won't block)
+      load7TVUserStyle(username).then(style => {
+        if (style && userMeta[username]) {
+          if (style.paint) userMeta[username].paint7TV = style.paint;
+          if (style.badge) userMeta[username].badge7TV = style.badge;
+          renderBoard(); // Re-render to show style
+        }
+      });
+    }
+    
+    // Check if user is moderator (various API fields)
+    const isMod = sender?.is_moderator || sender?.is_staff || sender?.badge?.type === 'moderator' || false;
+    if (isMod && !userMeta[username].isMod) {
+      userMeta[username].isMod = true;
+      console.log('🛡️ Moderator detectat:', username);
+    }
+    
+    // Get profile picture (try multiple possible fields)
+    const avatar = sender?.identity?.avatar || 
+                   sender?.identity?.profile_pic ||
+                   sender?.profile_pic || 
+                   sender?.avatar ||
+                   data?.sender_avatar ||
+                   null;
+    if (avatar && !userMeta[username].avatar) {
+      userMeta[username].avatar = avatar;
+      console.log('✓ Avatar salvat pentru', username, ':', avatar);
+    }
+    
+    counts[username]=(counts[username]||0)+1;
+    if (!messages[username]) messages[username]=[];
+    messages[username].push({ text: content, time: new Date() });
+    if (messages[username].length > MAX_MSGS_PER_USER)
+      messages[username].shift();
+    totalMsgs++;
+    mpmBuf.push(Date.now());
+    document.getElementById('s-total').textContent=totalMsgs.toLocaleString();
+    document.getElementById('s-users').textContent=Object.keys(counts).length;
+    renderBoard();
+  }
+
+  chV2.bind_global(function(ev,data){ if(!ev.startsWith('pusher')) processMsg(data); });
+  chV1.bind_global(function(ev,data){ if(!ev.startsWith('pusher')) processMsg(data); });
+}
+
+// ── MPM ────────────────────────────────────────────
+function updateMpm() {
+  const now=Date.now();
+  mpmBuf=mpmBuf.filter(t=>t>now-60000);
+  document.getElementById('s-mpm').textContent=mpmBuf.length;
+}
+
+// ── Render ─────────────────────────────────────────
+function renderBoard() {
+  if (renderTid) clearTimeout(renderTid);
+  renderTid=setTimeout(_render,120);
+}
+
+function _render() {
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,TOP);
+  if (!sorted.length) return;
+  emptyEl.style.display='none';
+  const maxCount=sorted[0][1];
+  boardEl.innerHTML='';
+
+  sorted.forEach(([username,count],i)=>{
+    const rank=i+1;
+    if(rank===4)  appendDivider('── Top 10 ──');
+    if(rank===11) appendDivider('── Top 50 ──');
+    let rc='rn';
+    if(rank===1) rc='r1'; else if(rank===2) rc='r2'; else if(rank===3) rc='r3';
+    const icon=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    const pct=maxCount>0?(count/maxCount*100).toFixed(1):0;
+    const bclr=rank===1?'var(--gold)':rank===2?'var(--silver)':rank===3?'var(--bronze)':'var(--g)';
+    
+    // Get user metadata
+    const meta = userMeta[username] || { isMod: false, avatar: null, paint7TV: null };
+    
+    // Use 7TV paint color if available, otherwise use hash color
+    const color = meta.paint7TV || hashColor(username);
+    const init=username.charAt(0).toUpperCase();
+    const crown=rank===1?'<span class="crown'+(isLive?'':' off')+'" title="'+(isLive?'🔴 Live Top!':'Top chatter')+'">👑</span>':'';
+    
+    const modBadge = meta.isMod ? '<span class="mod-badge">🛡️ MOD</span>' : '';
+    
+    // 7TV Badge as image if available, otherwise text badge if paint exists
+    let badge7TV = '';
+    if (meta.badge7TV) {
+      badge7TV = `<img class="badge-7tv-img" src="${meta.badge7TV.url}" srcset="${meta.badge7TV.url2x} 2x, ${meta.badge7TV.url4x} 4x" alt="${meta.badge7TV.name}" title="7TV: ${meta.badge7TV.name}">`;
+    } else if (meta.paint7TV) {
+      badge7TV = '<span class="seventv-badge" title="7TV Subscriber">7TV</span>';
+    }
+    
+    // Apply paint color to username if available
+    const usernameStyle = meta.paint7TV ? ` style="color:${meta.paint7TV};text-shadow:0 0 8px ${meta.paint7TV}88"` : '';
+    
+    // Avatar HTML - use profile pic if available, otherwise colored circle with initial
+    let avatarHtml;
+    if (meta.avatar) {
+      const modClass = meta.isMod ? ' mod-user' : '';
+      avatarHtml = '<img class="avatar has-img'+modClass+'" src="'+esc(meta.avatar)+'" alt="'+esc(username)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+                   '<div class="avatar'+modClass+'" style="background:'+color+';display:none">'+init+'</div>';
+    } else {
+      const modClass = meta.isMod ? ' mod-user' : '';
+      avatarHtml = '<div class="avatar'+modClass+'" style="background:'+color+'">'+init+'</div>';
+    }
+
+    const row=document.createElement('div');
+    row.className='row '+rc;
+    row.style.cursor='pointer';
+    row.title='Click pentru mesaje';
+    row.innerHTML=
+      '<div class="rank">'+icon+'</div>'+
+      avatarHtml+
+      '<div class="info">'+
+        '<span class="uname"'+usernameStyle+' title="'+esc(username)+'">'+esc(username)+modBadge+badge7TV+'</span>'+
+        '<div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:'+bclr+'"></div></div>'+
+      '</div>'+crown+
+      '<div class="count"><span class="num">'+count.toLocaleString()+'</span><span class="lbl">mesaje</span></div>';
+    row.addEventListener('click', ()=>openUserModal(username));
+    boardEl.appendChild(row);
+  });
+}
+
+function appendDivider(txt) {
+  const d=document.createElement('div');
+  d.className='divider'; d.textContent=txt;
+  boardEl.appendChild(d);
+}
+
+// ── Helpers ────────────────────────────────────────
+function setConn(state,txt){ connDot.className=state; connTxt.textContent=txt; }
+function showErr(msg){ errEl.textContent='⚠ '+msg; errEl.style.display='block'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const PALETTE=['#53fc18','#00e5ff','#ff6b6b','#ffd166','#c77dff','#ff9f1c','#7fffd4','#ff85a1','#78c6ff','#e9ff70','#ffb347','#b8f2e6'];
+function hashColor(str){ let h=0; for(const c of str) h=(h*31+c.charCodeAt(0))&0xffff; return PALETTE[h%PALETTE.length]; }
+
+// ══════════════════════════════════════════════════
+// PASSWORD PROTECTED RESET
+// ══════════════════════════════════════════════════
+const passwordModal = document.getElementById('password-modal');
+const passwordInput = document.getElementById('password-input');
+const passwordError = document.getElementById('password-error');
+const passwordConfirm = document.getElementById('password-confirm');
+const passwordCancel = document.getElementById('password-cancel');
+
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  passwordModal.classList.add('open');
+  passwordInput.value = '';
+  passwordError.textContent = '';
+  setTimeout(() => passwordInput.focus(), 100);
+});
+
+passwordCancel.addEventListener('click', closePasswordModal);
+passwordModal.addEventListener('click', (e) => {
+  if (e.target === passwordModal) closePasswordModal();
+});
+
+function closePasswordModal() {
+  passwordModal.classList.remove('open');
+  passwordInput.value = '';
+  passwordError.textContent = '';
+}
+
+passwordInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') passwordConfirm.click();
+  if (e.key === 'Escape') closePasswordModal();
+});
+
+passwordConfirm.addEventListener('click', () => {
+  const enteredPassword = passwordInput.value.trim();
+  
+  if (!enteredPassword) {
+    passwordError.textContent = '⚠ Introdu o parolă';
+    return;
+  }
+  
+  if (enteredPassword !== RESET_PASS) {
+    passwordError.textContent = '❌ Parolă incorectă! Verifică pe Instagram.';
+    passwordInput.value = '';
+    passwordInput.focus();
+    return;
+  }
+  
+  // Password correct - reset stats
+  if (!confirm('Ești sigur că vrei să resetezi toate statisticile?')) {
+    closePasswordModal();
+    return;
+  }
+  
+  for(const k in counts) delete counts[k];
+  for(const k in userMeta) delete userMeta[k];
+  for(const k in messages) delete messages[k];
+  totalMsgs=0; mpmBuf=[]; peakViewers=0;
+  ['s-total','s-users','s-mpm'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('s-peak').textContent='—';
+  boardEl.innerHTML=''; boardEl.appendChild(emptyEl); emptyEl.style.display='flex';
+  
+  // Clear saved state
+  clearState();
+  
+  closePasswordModal();
+  
+  // Success feedback
+  const successMsg = document.createElement('div');
+  successMsg.style.cssText = `
+    position:fixed;top:20px;left:50%;transform:translateX(-50%);
+    background:var(--g);color:#000;padding:12px 24px;
+    border-radius:8px;font-weight:600;z-index:400;
+    box-shadow:0 4px 20px rgba(83,252,24,.4);
+    animation:slideDown .3s ease;
+  `;
+  successMsg.textContent = '✓ Statistici resetate cu succes!';
+  document.body.appendChild(successMsg);
+  setTimeout(() => {
+    successMsg.style.animation = 'slideUp .3s ease';
+    setTimeout(() => successMsg.remove(), 300);
+  }, 2000);
+});
+
+// ══════════════════════════════════════════════════
+// USER MESSAGES MODAL
+// ══════════════════════════════════════════════════
+const userModal = document.getElementById('user-modal');
+
+function openUserModal(username) {
+  const msgs     = messages[username] || [];
+  const count    = counts[username]   || 0;
+  const initial  = username.charAt(0).toUpperCase();
+  const meta     = userMeta[username] || { isMod: false, avatar: null, paint7TV: null };
+  
+  // Use 7TV paint color if available, otherwise use hash color
+  const color    = meta.paint7TV || hashColor(username);
+
+  // Header
+  const avatarEl = document.getElementById('user-header-avatar');
+  
+  // Display profile picture if available
+  if (meta.avatar) {
+    avatarEl.innerHTML = '<img src="'+esc(meta.avatar)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+initial+'\';this.parentElement.style.background=\''+color+'\'">';
+    avatarEl.style.background = 'transparent';
+  } else {
+    avatarEl.style.background = color;
+    avatarEl.textContent = initial;
+    avatarEl.style.color = '#000';
+  }
+
+  const nameEl = document.getElementById('user-header-name');
+  nameEl.textContent = username;
+  nameEl.style.color = color;
+  
+  // Add moderator badge if applicable
+  if (meta.isMod) {
+    nameEl.innerHTML = esc(username) + ' <span class="mod-badge" style="margin-left:6px">🛡️ MOD</span>';
+  }
+
+  document.getElementById('user-header-stats').textContent =
+    count.toLocaleString() + ' mesaje totale' +
+    (msgs.length < count ? ' · ultimele ' + msgs.length + ' afișate' : '');
+
+  // Messages list
+  const list = document.getElementById('user-msgs-list');
+  list.innerHTML = '';
+
+  if (!msgs.length) {
+    list.innerHTML = '<div id="user-empty-msgs">Niciun mesaj salvat în sesiunea curentă.</div>';
+  } else {
+    // Afișăm de la cel mai recent
+    const reversed = [...msgs].reverse();
+    reversed.forEach(({text, time}) => {
+      const item = document.createElement('div');
+      item.className = 'umsg';
+      const hh = String(time.getHours()).padStart(2,'0');
+      const mm = String(time.getMinutes()).padStart(2,'0');
+      const ss = String(time.getSeconds()).padStart(2,'0');
+      item.innerHTML =
+        '<span class="umsg-time">' + hh + ':' + mm + ':' + ss + '</span>' +
+        '<span class="umsg-text">' + parseEmotes(text || '—') + '</span>';
+      list.appendChild(item);
+    });
+  }
+
+  userModal.style.display = 'flex';
+  requestAnimationFrame(() => userModal.classList.add('open'));
+}
+
+function closeUserModal() {
+  userModal.classList.remove('open');
+  setTimeout(() => { userModal.style.display = 'none'; }, 380);
+}
+
+document.getElementById('user-close').addEventListener('click', closeUserModal);
+userModal.addEventListener('click', e => { if (e.target === userModal) closeUserModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUserModal(); });
+
+// ══════════════════════════════════════════════════
+// DICE LOGIC
+// ══════════════════════════════════════════════════
+const modal       = document.getElementById('dice-modal');
+const cube        = document.getElementById('dice-cube');
+const diceScene   = document.getElementById('dice-scene');
+const winSection  = document.getElementById('winner-section');
+const spinHint    = document.getElementById('spin-hint');
+const winnerName  = document.getElementById('winner-name');
+const winnerMsgs  = document.getElementById('winner-msgs');
+
+let diceSpinning = false;
+
+// Orientări finale ale cubului pentru fețele 1-6
+const faceOrientations = {
+  1: 'rotateX(0deg)   rotateY(0deg)',
+  2: 'rotateX(-90deg) rotateY(0deg)',
+  3: 'rotateX(0deg)   rotateY(-90deg)',
+  4: 'rotateX(0deg)   rotateY(90deg)',
+  5: 'rotateX(90deg)  rotateY(0deg)',
+  6: 'rotateX(0deg)   rotateY(180deg)',
+};
+
+// Deschide modalul
+document.getElementById('dice-btn').addEventListener('click', openDiceModal);
+
+function openDiceModal() {
+  winSection.style.display = 'none';
+  spinHint.style.display   = 'block';
+  cube.classList.remove('spinning','landing');
+  cube.style.transform = 'rotateX(20deg) rotateY(30deg)';
+  modal.style.display  = 'flex';
+  // force reflow pentru tranziție
+  requestAnimationFrame(()=>{ modal.classList.add('open'); });
+}
+
+function closeDiceModal() {
+  modal.classList.remove('open');
+  setTimeout(()=>{ modal.style.display='none'; diceSpinning=false; },400);
+}
+
+document.getElementById('close-modal-btn').addEventListener('click', closeDiceModal);
+modal.addEventListener('click', e=>{ if(e.target===modal) closeDiceModal(); });
+
+document.getElementById('roll-again-btn').addEventListener('click', ()=>{
+  winSection.style.display='none';
+  spinHint.style.display='block';
+  cube.classList.remove('spinning','landing');
+  cube.style.transform='rotateX(20deg) rotateY(30deg)';
+  diceSpinning=false;
+});
+
+// Click pe zar => spin
+diceScene.addEventListener('click', rollDice);
+
+function rollDice() {
+  if (diceSpinning) return;
+
+  const users = Object.keys(counts);
+  if (users.length === 0) {
+    spinHint.textContent = '⚠ Nu există chatteri încă!';
+    return;
+  }
+
+  diceSpinning = true;
+  spinHint.style.display = 'none';
+  winSection.style.display = 'none';
+
+  // Alege câștigătorul (ponderat după numărul de mesaje)
+  const winner = pickWeightedWinner();
+
+  // Spin rapid 2.8s
+  cube.classList.remove('landing');
+  cube.style.transition = '';
+  cube.classList.add('spinning');
+  diceScene.classList.add('rolling');
+
+  setTimeout(()=>{
+    // Oprire pe o față aleatorie
+    const targetFace = Math.ceil(Math.random() * 6);
+    cube.classList.remove('spinning');
+    diceScene.classList.remove('rolling');
+    cube.classList.add('landing');
+    cube.style.transform = faceOrientations[targetFace] + ' rotateZ(0deg)';
+
+    // Arată câștigătorul după ce se oprește
+    setTimeout(()=>{
+      showWinner(winner);
+      diceSpinning = false;
+    }, 1500);
+
+  }, 2800);
+}
+
+function pickWeightedWinner() {
+  // Șansă proporțională cu numărul de mesaje
+  const entries = Object.entries(counts);
+  const total   = entries.reduce((s,[,v])=>s+v, 0);
+  let rand      = Math.random() * total;
+  for (const [user, cnt] of entries) {
+    rand -= cnt;
+    if (rand <= 0) return user;
+  }
+  return entries[entries.length-1][0];
+}
+
+function showWinner(username) {
+  winnerName.textContent = username;
+  const msgs = counts[username] || 0;
+  winnerMsgs.textContent = msgs.toLocaleString() + ' mesaje în sesiune';
+  winnerName.style.color = hashColor(username);
+  winnerName.style.textShadow = `0 0 40px ${hashColor(username)}88, 0 0 80px ${hashColor(username)}33`;
+  winSection.style.display = 'block';
+
+  // Confetti burst
+  launchConfetti();
+}
+
+// ── Mini confetti ──────────────────────────────────
+function launchConfetti() {
+  const colors=['#53fc18','#FFD700','#00e5ff','#ff6b6b','#c77dff','#ff9f1c'];
+  for (let i=0;i<55;i++) {
+    const el=document.createElement('div');
+    el.style.cssText=`
+      position:fixed;pointer-events:none;z-index:9999;
+      width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      left:${20+Math.random()*60}%;
+      top:-20px;
+      opacity:1;
+    `;
+    document.body.appendChild(el);
+    const dur = 1800+Math.random()*1200;
+    const tx  = (Math.random()-0.5)*300;
+    el.animate([
+      {transform:`translate(0,0) rotate(0deg)`,opacity:1},
+      {transform:`translate(${tx}px,${window.innerHeight+100}px) rotate(${Math.random()*720}deg)`,opacity:0}
+    ],{duration:dur,delay:Math.random()*600,easing:'cubic-bezier(.25,.46,.45,.94)'})
+     .finished.then(()=>el.remove());
+  }
+}
+</script>
+</body>
+</html>
