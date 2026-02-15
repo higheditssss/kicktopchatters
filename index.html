@@ -317,13 +317,15 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
   letter-spacing:.03em;
 }
 .umsg-text{font-size:13px;color:#d0e8d0;line-height:1.5;word-break:break-word}
-.umsg-text .emote{
+.umsg-text .emote,
+.emote{
   height:24px;
   width:auto;
   vertical-align:middle;
   margin:0 2px;
   display:inline-block;
   image-rendering:-webkit-optimize-contrast;
+  image-rendering:crisp-edges;
 }
 #user-empty-msgs{
   text-align:center;padding:40px 20px;
@@ -763,7 +765,7 @@ async function load7TVUserStyle(kickUsername) {
     
     if (!userId7TV) return null;
     
-    // Now query v4 GraphQL for style (paint + badge)
+    // Now query v4 GraphQL for style (paint + badge with full data)
     const graphqlQuery = {
       query: `query GetUserStyle($id: Id!) {
         users {
@@ -772,6 +774,27 @@ async function load7TVUserStyle(kickUsername) {
               activePaint {
                 id
                 name
+                data {
+                  layers {
+                    id
+                    ty(ty: "PaintLayerTypeImage") {
+                      images
+                    }
+                    opacity
+                  }
+                  shadows {
+                    color {
+                      hex
+                      r
+                      g
+                      b
+                      a
+                    }
+                    offsetX
+                    offsetY
+                    blur
+                  }
+                }
                 function
                 color
                 stops {
@@ -782,6 +805,14 @@ async function load7TVUserStyle(kickUsername) {
               activeBadge {
                 id
                 name
+                data {
+                  host {
+                    files {
+                      name
+                      format
+                    }
+                  }
+                }
               }
             }
           }
@@ -807,23 +838,33 @@ async function load7TVUserStyle(kickUsername) {
       badge: null
     };
     
-    // Extract paint color
+    // Extract paint color - support for gradients and solid colors
     const paint = style.activePaint;
     if (paint) {
       let color = null;
       
-      if (paint.function === 'LINEAR_GRADIENT' && paint.stops) {
-        color = paint.stops[0]?.color || null;
+      if (paint.function === 'LINEAR_GRADIENT' && paint.stops && paint.stops.length > 0) {
+        // Use the first color from gradient
+        const firstStop = paint.stops[0];
+        if (firstStop && firstStop.color) {
+          color = firstStop.color;
+        }
       } else if (paint.color) {
         color = paint.color;
       }
       
       if (color) {
-        result.paint = '#' + color.toString(16).padStart(6, '0');
+        // Convert ARGB integer to hex color
+        if (typeof color === 'number') {
+          const hex = (color & 0xFFFFFF).toString(16).padStart(6, '0');
+          result.paint = '#' + hex;
+        } else if (typeof color === 'string') {
+          result.paint = color.startsWith('#') ? color : '#' + color;
+        }
       }
     }
     
-    // Extract badge
+    // Extract badge with proper CDN URL
     const badge = style.activeBadge;
     if (badge?.id) {
       result.badge = {
@@ -831,7 +872,7 @@ async function load7TVUserStyle(kickUsername) {
         name: badge.name,
         url: `https://cdn.7tv.app/badge/${badge.id}/1x.webp`,
         url2x: `https://cdn.7tv.app/badge/${badge.id}/2x.webp`,
-        url4x: `https://cdn.7tv.app/badge/${badge.id}/4x.webp`
+        url4x: `https://cdn.7tv.app/badge/${badge.id}/3x.webp`
       };
     }
     
@@ -847,27 +888,60 @@ async function load7TVUserStyle(kickUsername) {
   }
 }
 
-// Load Kick native emotes
-async function loadKickEmotes() {
+// Load Kick native emotes (global + channel-specific)
+async function loadKickEmotes(channelSlug) {
   try {
-    // Kick has global emotes available at their API
-    const res = await fetch('https://emotes.kick.com/emotes');
-    if (!res.ok) return;
-    const emotes = await res.json();
+    // Load global Kick emotes
+    const globalRes = await fetch('https://emotes.kick.com/emotes');
+    if (globalRes.ok) {
+      const globalEmotes = await globalRes.json();
+      
+      globalEmotes.forEach(emote => {
+        if (!emotesMap[emote.name]) {  // Don't override 7TV emotes
+          emotesMap[emote.name] = {
+            id: emote.id,
+            name: emote.name,
+            url: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+            url2x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+            url4x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+            isKick: true
+          };
+        }
+      });
+      
+      console.log(`✓ ${globalEmotes.length} emote globale Kick încărcate`);
+    }
     
-    // Store Kick emotes in the same emotesMap
-    emotes.forEach(emote => {
-      emotesMap[emote.name] = {
-        id: emote.id,
-        name: emote.name,
-        url: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
-        url2x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
-        url4x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
-        isKick: true
-      };
-    });
-    
-    console.log(`✓ ${emotes.length} emote Kick încărcate`);
+    // Load channel-specific emotes if we have a channel slug
+    if (channelSlug) {
+      try {
+        const channelRes = await fetch(`https://kick.com/api/v2/channels/${channelSlug}`);
+        if (channelRes.ok) {
+          const channelData = await channelRes.json();
+          const chatroom = channelData?.chatroom;
+          
+          if (chatroom?.emotes) {
+            chatroom.emotes.forEach(emote => {
+              if (!emotesMap[emote.name]) {  // Don't override 7TV or global emotes
+                emotesMap[emote.name] = {
+                  id: emote.id,
+                  name: emote.name,
+                  url: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+                  url2x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+                  url4x: emote.url || `https://files.kick.com/emotes/${emote.id}/fullsize`,
+                  isKick: true,
+                  isChannelEmote: true
+                };
+              }
+            });
+            
+            console.log(`✓ ${chatroom.emotes.length} emote de canal Kick încărcate pentru ${channelSlug}`);
+          }
+        }
+      } catch(e) {
+        console.warn('Nu s-au putut încărca emoticoanele de canal:', e);
+      }
+    }
   } catch(e) {
     console.warn('Nu s-au putut încărca emoticoanele Kick:', e);
   }
@@ -1126,9 +1200,9 @@ btnGo.addEventListener('click', async () => {
       console.log('✓ Stare încărcată din sesiune anterioară');
     }
 
-    // Load emotes (7TV + Kick)
+    // Load emotes (7TV + Kick global + Kick channel-specific)
     load7TVEmotes(user);
-    loadKickEmotes();
+    loadKickEmotes(user);
 
     updateLiveUI(data);
     startPusher();
