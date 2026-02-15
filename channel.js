@@ -2,7 +2,7 @@
 //  Vercel Serverless Function: /api/channel
 // ─────────────────────────────────────────────
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -21,26 +21,30 @@ export default async function handler(req, res) {
   try {
     // Try v2 first, fallback to v1
     let data;
+    let response;
+    
     try {
-      const v2Response = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(user)}`, {
+      response = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(user)}`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json',
         },
       });
       
-      if (!v2Response.ok) throw new Error('v2 failed');
-      data = await v2Response.json();
+      if (!response.ok) throw new Error('v2 failed');
+      data = await response.json();
     } catch (e) {
-      const v1Response = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(user)}`, {
+      response = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(user)}`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json',
         },
       });
       
-      if (!v1Response.ok) throw new Error('Channel not found');
-      data = await v1Response.json();
+      if (!response.ok) {
+        return res.status(404).json({ error: 'Channel not found' });
+      }
+      data = await response.json();
     }
 
     const chatroomId = data?.chatroom?.id;
@@ -55,6 +59,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ chatroomId, isLive, title, viewers, avatar });
   } catch (error) {
+    console.error('API Error:', error);
     return res.status(502).json({ error: error.message || 'Failed to fetch channel data' });
   }
-}
+};
