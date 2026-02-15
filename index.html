@@ -950,16 +950,46 @@ async function loadKickEmotes(channelSlug) {
 function parseEmotes(text) {
   if (!text) return text;
   
-  // Split by spaces and process each word
+  // First, handle Kick's [emote:ID:name] format
+  // Replace with a placeholder to avoid conflicts
+  const emotePlaceholders = [];
+  text = text.replace(/\[emote:(\d+):([^\]]+)\]/g, (match, emoteId, emoteName) => {
+    const placeholder = `__EMOTE_${emotePlaceholders.length}__`;
+    
+    // Try to find the emote in our map by name
+    let emoteHtml;
+    if (emotesMap[emoteName]) {
+      const emote = emotesMap[emoteName];
+      emoteHtml = `<img class="emote" src="${emote.url}" srcset="${emote.url2x} 2x, ${emote.url4x} 4x" alt="${esc(emoteName)}" title="${esc(emoteName)}">`;
+    } else {
+      // If not found in map, construct URL from Kick's emote ID
+      const url = `https://files.kick.com/emotes/${emoteId}/fullsize`;
+      emoteHtml = `<img class="emote" src="${url}" alt="${esc(emoteName)}" title="${esc(emoteName)}">`;
+    }
+    
+    emotePlaceholders.push(emoteHtml);
+    return placeholder;
+  });
+  
+  // Then handle regular space-separated emotes (7TV style)
   const words = text.split(' ');
-  return words.map(word => {
-    // Check if this word is an emote
+  const processedWords = words.map(word => {
+    // Check if this is a placeholder
+    if (word.startsWith('__EMOTE_') && word.endsWith('__')) {
+      const index = parseInt(word.substring(8, word.length - 2));
+      return emotePlaceholders[index] || word;
+    }
+    
+    // Check if this word is an emote in our map
     if (emotesMap[word]) {
       const emote = emotesMap[word];
-      return `<img class="emote" src="${emote.url}" srcset="${emote.url2x} 2x, ${emote.url4x} 4x" alt="${emote.name}" title="${emote.name}">`;
+      return `<img class="emote" src="${emote.url}" srcset="${emote.url2x} 2x, ${emote.url4x} 4x" alt="${esc(emote.name)}" title="${esc(emote.name)}">`;
     }
+    
     return esc(word);
-  }).join(' ');
+  });
+  
+  return processedWords.join(' ');
 }
 
 // ── DOM ────────────────────────────────────────────
