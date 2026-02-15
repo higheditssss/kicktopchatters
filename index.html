@@ -699,8 +699,15 @@ let pusher,chan,mpmBuf=[],renderTid=null;
 let peakViewers=0;
 const TOP=50;
 
-// Password obfuscation (Base64 + reverse)
-const RESET_PASS = atob('dGFjb2Ftb2Ft'.split('').reverse().join(''));
+// Password verification using SHA-256 hash (imposibil de decriptat)
+const RESET_PASS_HASH = '358c4028dabfb70421ffcc9b33ca0a986f6f5fcf07abd8251de6d80c1f7087fe';
+
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 // ══════════════════════════════════════════════════
 // 7TV EMOTE & PAINT INTEGRATION
@@ -1375,7 +1382,7 @@ passwordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closePasswordModal();
 });
 
-passwordConfirm.addEventListener('click', () => {
+passwordConfirm.addEventListener('click', async () => {
   const enteredPassword = passwordInput.value.trim();
   
   if (!enteredPassword) {
@@ -1383,7 +1390,10 @@ passwordConfirm.addEventListener('click', () => {
     return;
   }
   
-  if (enteredPassword !== RESET_PASS) {
+  // Hash the entered password and compare
+  const enteredHash = await hashPassword(enteredPassword);
+  
+  if (enteredHash !== RESET_PASS_HASH) {
     passwordError.textContent = '❌ Parolă incorectă! Verifică pe Instagram.';
     passwordInput.value = '';
     passwordInput.focus();
