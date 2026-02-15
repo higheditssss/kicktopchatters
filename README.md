@@ -1,112 +1,60 @@
-// ─────────────────────────────────────────────
-//  Top Chatters — Kick.com proxy server
-//  Run: node server.js
-//  Then open: http://localhost:3000
-// ─────────────────────────────────────────────
-const http = require('http');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const url = require('url');
+# Top Chatters — Kick.com Viewer
 
-const PORT = 3000;
+O aplicație web pentru vizualizarea celor mai activi chatteri pe Kick.com
 
-function fetchJson(targetUrl) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json',
-      }
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Invalid JSON from Kick')); }
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(8000, () => { req.destroy(); reject(new Error('Timeout')); });
-  });
-}
+## 🚀 Deploy pe Vercel
 
-const server = http.createServer(async (req, res) => {
-  const parsed = url.parse(req.url, true);
+### Opțiunea 1: Deploy rapid (recomandat)
 
-  // CORS headers pentru toate răspunsurile
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Cache-Control', 'no-cache');
+1. Instalează Vercel CLI:
+```bash
+npm i -g vercel
+```
 
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+2. În folderul proiectului, rulează:
+```bash
+vercel
+```
 
-  // ── API proxy: /api/channel?user=highman ──
-  if (parsed.pathname === '/api/channel') {
-    const user = parsed.query.user;
-    if (!user) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Missing ?user= param' }));
-      return;
-    }
+3. Urmează pașii din terminal (first deploy → link to new project → da)
 
-    try {
-      // Încearcă v2 mai întâi, fallback la v1
-      let data;
-      try {
-        data = await fetchJson(`https://kick.com/api/v2/channels/${encodeURIComponent(user)}`);
-      } catch(e) {
-        data = await fetchJson(`https://kick.com/api/v1/channels/${encodeURIComponent(user)}`);
-      }
+### Opțiunea 2: Deploy prin GitHub
 
-      const chatroomId = data?.chatroom?.id;
-      const isLive     = !!(data?.livestream);
-      const title      = data?.livestream?.session_title || null;
-      const viewers    = data?.livestream?.viewer_count || 0;
-      const avatar     = data?.user?.profile_pic || null;
+1. Push proiectul pe GitHub
+2. Mergi pe [vercel.com](https://vercel.com)
+3. Click "Import Project" și selectează repo-ul tău
+4. Vercel va detecta automat configurația
+5. Click "Deploy"
 
-      if (!chatroomId) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Channel not found or no chatroom' }));
-        return;
-      }
+## 📁 Structura pentru Vercel
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ chatroomId, isLive, title, viewers, avatar }));
-    } catch (e) {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: e.message }));
-    }
-    return;
-  }
+```
+├── api/
+│   └── channel.js          # Serverless function pentru Kick API
+├── index.html              # Frontend-ul aplicației
+└── vercel.json            # Configurație Vercel
+```
 
-  // ── Serve index.html ──────────────────────
-  if (parsed.pathname === '/' || parsed.pathname === '/index.html') {
-    const filePath = path.join(__dirname, 'index.html');
-    if (!fs.existsSync(filePath)) {
-      res.writeHead(404);
-      res.end('index.html not found');
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    fs.createReadStream(filePath).pipe(res);
-    return;
-  }
+## 🛠️ Rulare locală
 
-  res.writeHead(404);
-  res.end('Not found');
-});
+Pentru development local cu Node.js:
 
-server.listen(PORT, () => {
-  console.log('');
-  console.log('  ⚡ Top Chatters Server pornit!');
-  console.log(`  🌐 Deschide: http://localhost:${PORT}`);
-  console.log('  📡 Proxy Kick API activ');
-  console.log('');
-  console.log('  Apasă CTRL+C ca să oprești.');
-  console.log('');
-});
+```bash
+node server.js
+```
+
+Apoi deschide: http://localhost:3000
+
+## 📝 Note
+
+- **vercel.json** configurează routing-ul și build process-ul
+- **api/channel.js** este o serverless function care rulează pe Vercel
+- Frontend-ul (`index.html`) se servește static
+- Nu mai ai nevoie de `server.js` după deployment pe Vercel
+
+## 🔧 Troubleshooting
+
+Dacă ai erori la deploy:
+- Verifică că ai toate cele 3 fișiere: `index.html`, `api/channel.js`, `vercel.json`
+- Asigură-te că folderul `api` există și conține `channel.js`
+- Rulează `vercel --prod` pentru production deployment
