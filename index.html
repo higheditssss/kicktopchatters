@@ -44,12 +44,33 @@ body[data-theme="dark"]{
   --text:#c0c0c0;--muted:rgba(160,160,160,.42);
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;--grid-opacity:.025;--glow-opacity:.06}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;--grid-opacity:.015;--glow-opacity:.03}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--g) 1px,transparent 1px),linear-gradient(90deg,var(--g) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;opacity:var(--grid-opacity)}
 body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:500px;background:radial-gradient(ellipse,var(--g) 0%,transparent 70%);pointer-events:none;z-index:0;opacity:var(--glow-opacity)}
-body[data-theme="dark"]::before{opacity:.015}
-body[data-theme="dark"]::after{opacity:.03}
-.wrap{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:0 20px 80px;opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,1,.36,1)}
+body[data-theme="dark"]::before{opacity:.01}
+body[data-theme="dark"]::after{opacity:.015}
+
+/* ── Login Modal ── */
+#login-modal{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px;backdrop-filter:blur(0px)}
+#login-modal.hidden{display:none}
+.login-card{background:linear-gradient(135deg,rgba(13,16,16,.95),rgba(7,9,10,.98));border:1px solid var(--border);border-radius:20px;padding:50px 45px;width:100%;max-width:440px;box-shadow:0 0 60px rgba(83,252,24,.08),0 30px 60px rgba(0,0,0,.4);position:relative;overflow:hidden;animation:loginFadeIn .5s cubic-bezier(.22,1,.36,1)}
+@keyframes loginFadeIn{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g) 20%,var(--g) 80%,transparent);opacity:.6}
+.login-card::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,rgba(83,252,24,.2),transparent)}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--g);letter-spacing:.1em;text-shadow:0 0 30px rgba(83,252,24,.4);margin-bottom:10px;text-align:center;line-height:1}
+.login-subtitle{font-size:14px;color:var(--g);margin-bottom:8px;text-align:center;font-weight:500;opacity:.8;letter-spacing:.05em}
+.login-desc{font-size:13px;color:rgba(180,210,180,.5);margin-bottom:32px;line-height:1.5;text-align:center}
+#login-input{width:100%;background:rgba(83,252,24,.03);border:1px solid rgba(83,252,24,.15);border-radius:12px;padding:16px 20px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:all .3s;margin-bottom:20px;letter-spacing:.02em}
+#login-input:focus{border-color:rgba(83,252,24,.4);box-shadow:0 0 0 3px rgba(83,252,24,.08),0 0 20px rgba(83,252,24,.15);background:rgba(83,252,24,.05)}
+#login-input::placeholder{color:rgba(180,210,180,.3)}
+#login-btn{width:100%;background:linear-gradient(135deg,var(--g),#3fc010);color:#000;border:none;border-radius:12px;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.14em;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(83,252,24,.25);font-weight:500}
+#login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(83,252,24,.35)}
+#login-btn:active{transform:translateY(0px) scale(.98)}
+#login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+#login-error{margin-top:16px;font-size:13px;color:#ff6b6b;text-align:center;min-height:20px;font-weight:500;background:rgba(255,107,107,.1);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,107,107,.2);opacity:0;transition:opacity .3s}
+#login-error:not(:empty){opacity:1}
+
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 40px 80px;opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,1,.36,1)}
 .wrap.show{opacity:1;transform:translateY(0)}
 
 /* ── Setup ── */
@@ -72,11 +93,11 @@ body[data-theme="dark"]::after{opacity:.03}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── Header ── */
-header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);margin-bottom:26px}
-.header-left{display:flex;align-items:center;gap:14px}
-#ch-avatar{width:52px;height:52px;border-radius:50%;border:2px solid var(--border);object-fit:cover;display:none;flex-shrink:0}
-.header-titles h1{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;color:var(--g);letter-spacing:.04em;text-shadow:0 0 40px var(--g)}
-.header-titles .ch-name{font-size:13px;color:var(--muted);letter-spacing:.07em;margin-top:3px}
+header{padding:48px 0 32px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.header-left{display:flex;align-items:center;gap:18px}
+#ch-avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(--border);object-fit:cover;display:none;flex-shrink:0}
+.header-titles h1{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;color:var(--g);letter-spacing:.04em;text-shadow:0 0 40px var(--g)}
+.header-titles .ch-name{font-size:15px;color:var(--muted);letter-spacing:.07em;margin-top:4px}
 .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding-top:6px}
 #theme-selector{display:flex;gap:6px;align-items:center;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:20px}
 .theme-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
@@ -93,7 +114,7 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 #live-badge .rdot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 9px var(--red);animation:pulse 1.4s ease-in-out infinite}
 #offline-badge{display:none;align-items:center;gap:7px;background:rgba(136,136,136,.1);border:1px solid rgba(136,136,136,.3);border-radius:20px;padding:5px 14px 5px 10px;font-size:11px;font-weight:600;color:#888;letter-spacing:.1em;text-transform:uppercase}
 #offline-badge .odot{width:8px;height:8px;border-radius:50%;background:#666}
-#live-title{display:none;font-size:11px;color:var(--muted);max-width:220px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#live-title{display:none;font-size:11px;color:var(--muted);max-width:340px;text-align:right;line-height:1.4;word-break:break-word}
 #conn-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)}
 #conn-dot{width:7px;height:7px;border-radius:50%;background:#333;transition:background .4s}
 #conn-dot.live{background:var(--g);box-shadow:0 0 7px var(--g);animation:pulse 2s infinite}
@@ -104,10 +125,74 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 @keyframes slideUp{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}
 
 /* ── Stats ── */
-.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
-.stat-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;flex:1;min-width:110px}
-.stat-chip .val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--g);line-height:1;letter-spacing:.03em}
-.stat-chip .lbl{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-top:3px}
+.stats-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:32px;justify-content:center}
+.stat-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 24px;flex:1;min-width:160px;max-width:240px}
+.stat-chip .val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--g);line-height:1;letter-spacing:.03em}
+.stat-chip .lbl{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-top:4px}
+
+/* ── Podium Section ── */
+#podium-section{display:none;gap:24px;margin-bottom:20px;align-items:flex-start}
+@media (min-width:1100px){#podium-section{display:flex}}
+@media (max-width:1099px){#podium-section{display:block}#activity-graph-wrap{margin-top:20px}}
+
+/* ── Podium Top 3 ── */
+#podium-wrap{display:none;flex:1;min-width:0}
+#podium{display:flex;align-items:flex-end;justify-content:center;gap:24px;margin-bottom:12px}
+.podium-place{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative}
+.podium-place.p1{order:2}
+.podium-place.p2{order:1}
+.podium-place.p3{order:3}
+.podium-avatar-wrap{position:relative;display:inline-block;cursor:pointer;transition:transform .3s ease}
+.podium-avatar-wrap:hover{transform:translateY(-4px)}
+.podium-avatar{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:36px;color:#000;border:3px solid;position:relative;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;transition:all .3s ease}
+.podium-avatar-wrap:hover .podium-avatar{transform:scale(1.05)}
+.p1 .podium-avatar{border-color:var(--gold);box-shadow:0 0 20px var(--gold),0 8px 20px rgba(0,0,0,.6);width:110px;height:110px;font-size:42px}
+.p2 .podium-avatar{border-color:var(--silver);box-shadow:0 0 16px var(--silver),0 6px 18px rgba(0,0,0,.5)}
+.p3 .podium-avatar{border-color:var(--bronze);box-shadow:0 0 16px var(--bronze),0 6px 18px rgba(0,0,0,.5)}
+.podium-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.podium-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.04em;max-width:140px;text-align:center;word-break:break-word;line-height:1.1;cursor:pointer;transition:all .2s ease}
+.podium-name:hover{transform:scale(1.08);opacity:.8}
+.p1 .podium-name{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.3);font-size:26px}
+.p1 .podium-name:hover{text-shadow:0 0 16px rgba(255,215,0,.5)}
+.p2 .podium-name{color:var(--silver)}
+.p2 .podium-name:hover{text-shadow:0 0 12px rgba(184,196,204,.4)}
+.p3 .podium-name{color:var(--bronze)}
+.p3 .podium-name:hover{text-shadow:0 0 12px rgba(200,125,58,.4)}
+.podium-count{font-size:15px;color:var(--muted);font-family:'DM Mono',monospace}
+.podium-bar{width:120px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px 12px 0 0;transition:height .5s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
+.p1 .podium-bar{height:170px;background:linear-gradient(180deg,rgba(255,215,0,.08),rgba(255,215,0,.02));border-color:rgba(255,215,0,.2)}
+.p2 .podium-bar{height:135px;background:linear-gradient(180deg,rgba(184,196,204,.06),rgba(184,196,204,.01));border-color:rgba(184,196,204,.15)}
+.p3 .podium-bar{height:105px;background:linear-gradient(180deg,rgba(200,125,58,.06),rgba(200,125,58,.01));border-color:rgba(200,125,58,.15)}
+.podium-bar::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px}
+.p1 .podium-bar::before{background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.p2 .podium-bar::before{background:var(--silver);box-shadow:0 0 10px var(--silver)}
+.p3 .podium-bar::before{background:var(--bronze);box-shadow:0 0 10px var(--bronze)}
+.podium-rank{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',sans-serif;font-size:54px;opacity:.15}
+.p1 .podium-rank{color:var(--gold);font-size:60px}
+.p2 .podium-rank{color:var(--silver)}
+.p3 .podium-rank{color:var(--bronze)}
+
+/* ── Activity Panels ── */
+#activity-panels{flex:0 0 420px;min-width:0;display:none;flex-direction:column;gap:12px}
+.activity-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.activity-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:.4}
+.panel-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.panel-icon{font-size:24px;flex-shrink:0}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--g);letter-spacing:.08em;text-shadow:0 0 20px var(--g);line-height:1}
+.panel-subtitle{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-top:3px}
+
+/* Top Emotes */
+#top-emotes-list{display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto}
+#top-emotes-list::-webkit-scrollbar{width:4px}
+#top-emotes-list::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}
+#top-emotes-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.emote-item{display:flex;align-items:center;gap:10px;padding:8px;background:rgba(255,255,255,.02);border-radius:8px;transition:all .2s}
+.emote-item:hover{background:rgba(255,255,255,.04);transform:translateX(3px)}
+.emote-rank{font-family:'Bebas Neue',sans-serif;font-size:16px;color:rgba(200,225,200,.3);width:20px;text-align:center}
+.emote-img{width:32px;height:32px;object-fit:contain;flex-shrink:0}
+.emote-info{flex:1;min-width:0}
+.emote-name{font-size:11px;font-weight:600;color:var(--text);text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.emote-count{font-family:'DM Mono',monospace;font-size:13px;color:var(--g);font-weight:600}
 
 /* ── Dice button ── */
 #dice-btn-wrap{display:none;justify-content:center;margin-bottom:22px}
@@ -115,20 +200,21 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
   display:flex;align-items:center;gap:10px;
   background:linear-gradient(135deg,#1a0a00,#2d1500);
   border:1px solid rgba(255,165,0,.4);
-  border-radius:12px;padding:12px 28px;
-  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.1em;
+  border-radius:12px;padding:10px 28px;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.1em;
   color:#ff9f1c;cursor:pointer;
-  transition:all .2s;box-shadow:0 0 20px rgba(255,159,28,.1);
+  transition:all .2s;box-shadow:0 0 20px rgba(255,159,28,.12);
 }
-#dice-btn:hover{border-color:rgba(255,165,0,.8);box-shadow:0 0 30px rgba(255,159,28,.25);transform:translateY(-1px)}
+#dice-btn:hover{border-color:rgba(255,165,0,.8);box-shadow:0 0 32px rgba(255,159,28,.25);transform:translateY(-1px)}
 #dice-btn:active{transform:scale(.97)}
 #dice-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.dice-icon{font-size:24px;display:inline-block;transition:transform .15s}
+.dice-icon{font-size:22px;display:inline-block;transition:transform .15s}
 #dice-btn:hover .dice-icon{transform:rotate(20deg)}
 
 /* ── Board ── */
-#board{display:flex;flex-direction:column;gap:4px}
-#empty{text-align:center;padding:70px 20px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#board{display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:8px;align-items:start}
+@media (max-width:1000px){#board{grid-template-columns:1fr}}
+#empty{text-align:center;padding:70px 20px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;align-items:center;gap:14px;grid-column:1/-1}
 #empty .ico{font-size:44px;opacity:.35}
 .row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s;animation:rowIn .3s cubic-bezier(.22,1,.36,1) both}
 .row:hover{border-color:rgba(83,252,24,.2);transform:translateX(3px)}
@@ -150,6 +236,8 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 .mod-badge{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--g),#3fc010);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;color:#000;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 12px rgba(83,252,24,.5),0 2px 8px rgba(0,0,0,.3);flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
 .seventv-badge{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#00a8fc,#0084d4);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;color:#fff;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 12px rgba(0,168,252,.5),0 2px 8px rgba(0,0,0,.3);flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
 .badge-7tv-img{height:18px;width:auto;vertical-align:middle;margin:0 2px;display:inline-block;image-rendering:-webkit-optimize-contrast;flex-shrink:0}
+.badge-7tv-podium{height:20px;width:auto;vertical-align:middle;margin-left:6px;display:inline-block;image-rendering:-webkit-optimize-contrast}
+.seventv-badge-podium{display:inline-block;background:linear-gradient(135deg,#00a8fc,#0084d4);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:800;color:#fff;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 0 8px rgba(0,168,252,.4);margin-left:6px;vertical-align:middle}
 .bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:5px;overflow:hidden}
 .bar{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.22,1,.36,1)}
 .crown{font-size:18px;flex-shrink:0;animation:crownBob 2s ease-in-out infinite}
@@ -158,7 +246,7 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 .count{text-align:right;flex-shrink:0;min-width:52px}
 .count .num{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--g);display:block}
 .count .lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.divider{text-align:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,220,200,.15);padding:8px 0 4px;font-weight:600}
+.divider{grid-column:1/-1;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,220,200,.15);padding:12px 0 8px;font-weight:600}
 
 /* ── 7TV Debug Panel ── */
 #debug-panel{
@@ -520,6 +608,21 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 </style>
 </head>
 <body>
+
+<!-- ── Login Modal ── -->
+<div id="login-modal">
+  <div class="login-card">
+    <div class="login-logo">TOP CHATTERS</div>
+    <div class="login-subtitle">🔒 Acces Restricționat</div>
+    <div class="login-desc">
+      Introdu parola pentru a accesa aplicația
+    </div>
+    <input type="password" id="login-input" placeholder="Parolă..." autocomplete="off">
+    <button id="login-btn" onclick="window.testLogin && window.testLogin()">🔓 Deblochează Accesul</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
 <script>
 // Instant hide to prevent flicker - runs before page render
 (function(){
@@ -673,6 +776,65 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
     <div class="stat-chip"><div class="val" id="s-peak">—</div><div class="lbl">Peak viewers</div></div>
   </div>
 
+  <!-- Podium + Activity Graph Section -->
+  <div id="podium-section">
+    <!-- Top 3 Podium -->
+    <div id="podium-wrap">
+      <div id="podium">
+        <!-- Locul 1 (mijloc) -->
+        <div class="podium-place p1">
+          <div class="podium-avatar-wrap">
+            <div class="podium-avatar" id="pod-avatar-1"></div>
+          </div>
+          <div class="podium-name" id="pod-name-1">—</div>
+          <div class="podium-count" id="pod-count-1">0 msg</div>
+          <div class="podium-bar">
+            <div class="podium-rank">1</div>
+          </div>
+        </div>
+        
+        <!-- Locul 2 (stânga) -->
+        <div class="podium-place p2">
+          <div class="podium-avatar-wrap">
+            <div class="podium-avatar" id="pod-avatar-2"></div>
+          </div>
+          <div class="podium-name" id="pod-name-2">—</div>
+          <div class="podium-count" id="pod-count-2">0 msg</div>
+          <div class="podium-bar">
+            <div class="podium-rank">2</div>
+          </div>
+        </div>
+        
+        <!-- Locul 3 (dreapta) -->
+        <div class="podium-place p3">
+          <div class="podium-avatar-wrap">
+            <div class="podium-avatar" id="pod-avatar-3"></div>
+          </div>
+          <div class="podium-name" id="pod-name-3">—</div>
+          <div class="podium-count" id="pod-count-3">0 msg</div>
+          <div class="podium-bar">
+            <div class="podium-rank">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Panels -->
+    <div id="activity-panels">
+      <!-- Top Emotes -->
+      <div class="activity-panel" id="top-emotes-panel">
+        <div class="panel-header">
+          <div class="panel-icon">😀</div>
+          <div>
+            <div class="panel-title">TOP EMOTES</div>
+            <div class="panel-subtitle">Cele mai folosite</div>
+          </div>
+        </div>
+        <div id="top-emotes-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Dice trigger button -->
   <div id="dice-btn-wrap">
     <button id="dice-btn">
@@ -708,6 +870,163 @@ header{padding:38px 0 26px;display:flex;align-items:flex-start;justify-content:s
 </div>
 
 <script>
+// ══════════════════════════════════════════════════
+// PASSWORD HASHING & CONSTANTS
+// ══════════════════════════════════════════════════
+// Password verification using SHA-256 hash (imposibil de decriptat)
+const RESET_PASS_HASH = '358c4028dabfb70421ffcc9b33ca0a986f6f5fcf07abd8251de6d80c1f7087fe';
+// Login password hash - SHA-256 of "maomaocat"
+const LOGIN_PASS_HASH = '358c4028dabfb70421ffcc9b33ca0a986f6f5fcf07abd8251de6d80c1f7087fe';
+
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Global test login function (fallback if event listener fails)
+window.testLogin = async function() {
+  console.log('🧪 INLINE onclick fired!');
+  const loginInput = document.getElementById('login-input');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+  const loginModal = document.getElementById('login-modal');
+  
+  const password = loginInput.value.trim();
+  if (!password) {
+    loginError.textContent = '⚠ Introdu parola';
+    return;
+  }
+  
+  loginBtn.disabled = true;
+  loginBtn.textContent = '🔄 Verificare...';
+  loginError.textContent = '';
+  
+  try {
+    const hash = await hashPassword(password);
+    console.log('🔑 Hash:', hash);
+    if (hash === LOGIN_PASS_HASH) {
+      console.log('✅ SUCCESS!');
+      localStorage.setItem(LOGIN_STORAGE_KEY, hash);
+      loginModal.style.opacity = '0';
+      setTimeout(() => {
+        loginModal.classList.add('hidden');
+      }, 400);
+    } else {
+      console.log('❌ WRONG PASSWORD');
+      loginError.textContent = '❌ Parolă incorectă!';
+      loginInput.value = '';
+      loginBtn.disabled = false;
+      loginBtn.textContent = '🔓 Deblochează Accesul';
+    }
+  } catch(e) {
+    console.error('❌ ERROR:', e);
+    loginError.textContent = '❌ Eroare: ' + e.message;
+    loginBtn.disabled = false;
+    loginBtn.textContent = '🔓 Deblochează Accesul';
+  }
+};
+
+// ══════════════════════════════════════════════════
+// LOGIN AUTHENTICATION
+// ══════════════════════════════════════════════════
+const LOGIN_STORAGE_KEY = 'topChattersAuth';
+
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM loaded, searching for login elements...');
+  
+  const loginModal = document.getElementById('login-modal');
+  const loginInput = document.getElementById('login-input');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+
+  console.log('🔍 Login elements found:', {
+    loginModal: !!loginModal,
+    loginInput: !!loginInput,
+    loginBtn: !!loginBtn,
+    loginError: !!loginError
+  });
+
+  if (!loginBtn) {
+    console.error('❌ Login button NOT FOUND!');
+    return;
+  }
+
+  // Check if already authenticated
+  function checkAuth() {
+    const stored = localStorage.getItem(LOGIN_STORAGE_KEY);
+    if (stored === LOGIN_PASS_HASH) {
+      loginModal.classList.add('hidden');
+      return true;
+    }
+    return false;
+  }
+
+  // Login handler
+  async function handleLogin() {
+    console.log('🔐 handleLogin called!');
+    const password = loginInput.value.trim();
+    if (!password) {
+      loginError.textContent = '⚠ Introdu parola';
+      return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = '🔄 Verificare...';
+    loginError.textContent = '';
+    
+    try {
+      const hash = await hashPassword(password);
+      console.log('🔑 Hash generated:', hash.substring(0, 10) + '...');
+      if (hash === LOGIN_PASS_HASH) {
+        // Success
+        console.log('✅ Login successful!');
+        localStorage.setItem(LOGIN_STORAGE_KEY, hash);
+        loginModal.style.transition = 'opacity .4s ease';
+        loginModal.style.opacity = '0';
+        setTimeout(() => {
+          loginModal.classList.add('hidden');
+        }, 400);
+      } else {
+        // Wrong password
+        console.log('❌ Wrong password');
+        loginError.textContent = '❌ Parolă incorectă!';
+        loginInput.value = '';
+        loginInput.focus();
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🔓 Deblochează Accesul';
+      }
+    } catch(e) {
+      console.error('❌ Error during login:', e);
+      loginError.textContent = '❌ Eroare la autentificare';
+      loginBtn.disabled = false;
+      loginBtn.textContent = '🔓 Deblochează Accesul';
+    }
+  }
+
+  console.log('🔗 Attaching event listeners...');
+  loginBtn.addEventListener('click', function() {
+    console.log('🖱️ Button CLICKED!');
+    handleLogin();
+  });
+  
+  loginInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      console.log('⌨️ Enter pressed!');
+      handleLogin();
+    }
+  });
+
+  console.log('✅ Event listeners attached successfully');
+
+  // Check auth on load
+  if (!checkAuth()) {
+    loginInput.focus();
+  }
+});
+
 // ── State ──────────────────────────────────────────
 const counts   = {};   // username → message count
 const messages = {};   // username → [{text, time}]
@@ -719,16 +1038,10 @@ let pusher,chan,mpmBuf=[],renderTid=null;
 let peakViewers=0;
 const TOP=50;
 
-// Password verification using SHA-256 hash (imposibil de decriptat)
-const RESET_PASS_HASH = '358c4028dabfb70421ffcc9b33ca0a986f6f5fcf07abd8251de6d80c1f7087fe';
-
-async function hashPassword(password) {
-  const msgBuffer = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
+// Activity panels
+let emoteUsage = {}; // emote name → count
+let sessionStartTime = Date.now();
+let maxMsgPerSecond = 0;
 // ══════════════════════════════════════════════════
 // 7TV EMOTE & PAINT INTEGRATION
 // ══════════════════════════════════════════════════
@@ -773,12 +1086,20 @@ function argbToHex(color) {
 async function load7TVUserStyle(kickUserId) {
   if (!kickUserId) return null;
   try {
-    // Get 7TV user data from Kick user ID (v3 REST)
     const res = await fetch(`https://7tv.io/v3/users/kick/${kickUserId}`, {
       headers: { 'Accept': 'application/json' }
     });
     if (!res.ok) return null;
     const data = await res.json();
+
+    console.log(`[7TV API] Response for Kick ID ${kickUserId}:`, {
+      username: data?.user?.username,
+      has_style: !!data?.user?.style,
+      color: data?.user?.style?.color,
+      paint_id: data?.user?.style?.paint_id,
+      has_paint_object: !!data?.user?.style?.paint,
+      badge_id: data?.user?.style?.badge_id
+    });
 
     const result = { 
       paint: null, 
@@ -788,13 +1109,59 @@ async function load7TVUserStyle(kickUserId) {
       badge: null 
     };
 
-    // Get user style data from v3 response
     const userStyle = data?.user?.style;
-    if (!userStyle) return null;
+    if (!userStyle || (!userStyle.color && !userStyle.badge_id && !userStyle.paint_id)) {
+      return null;
+    }
 
-    // ── Paint (from v3 style.color field) ─────────────────────
-    if (userStyle.color != null) {
-      const color = userStyle.color >>> 0; // Convert to unsigned
+    // Paint from paint_id (gradients, animated paints)
+    const paintId = userStyle.paint_id;
+    if (paintId) {
+      const paint = data?.user?.style?.paint;
+      if (paint) {
+        // Check if it's a gradient
+        if (paint.function === 'LINEAR_GRADIENT' || paint.function === 'RADIAL_GRADIENT') {
+          const stops = paint.stops || [];
+          if (stops.length > 0) {
+            const gradientStops = stops.map(stop => {
+              const color = stop.color >>> 0;
+              const r = (color >> 24) & 0xFF;
+              const g = (color >> 16) & 0xFF;
+              const b = (color >> 8) & 0xFF;
+              const a = (color & 0xFF) / 255;
+              const pos = (stop.at * 100).toFixed(0);
+              return `rgba(${r},${g},${b},${a}) ${pos}%`;
+            }).join(', ');
+            
+            if (paint.function === 'LINEAR_GRADIENT') {
+              const angle = paint.angle || 0;
+              result.paint = `linear-gradient(${angle}deg, ${gradientStops})`;
+            } else {
+              result.paint = `radial-gradient(circle, ${gradientStops})`;
+            }
+            
+            // Use first color as solid fallback
+            const firstColor = stops[0].color >>> 0;
+            const r = (firstColor >> 24) & 0xFF;
+            const g = (firstColor >> 16) & 0xFF;
+            const b = (firstColor >> 8) & 0xFF;
+            result.paintColor = `rgb(${r},${g},${b})`;
+          }
+        }
+        // Check if it's an image/animated paint
+        else if (paint.function === 'URL') {
+          result.paintIsImage = true;
+          result.paintImageUrl = paint.image_url || `https://cdn.7tv.app/paint/${paintId}`;
+          result.paint = null; // Will use image instead
+          result.paintColor = '#00a8fc'; // Default 7TV blue fallback
+        }
+      }
+      // If paint_id exists but no paint object, we'll fall through to color fallback below
+    }
+
+    // Fallback: Paint from v3 style.color field (simple solid color or when paint object missing)
+    if (!result.paint && !result.paintIsImage && userStyle.color != null) {
+      const color = userStyle.color >>> 0;
       const r = (color >> 24) & 0xFF;
       const g = (color >> 16) & 0xFF;
       const b = (color >> 8) & 0xFF;
@@ -809,7 +1176,7 @@ async function load7TVUserStyle(kickUserId) {
       }
     }
 
-    // ── Badge (from v3 style.badge_id) ────────────────────────
+    // Badge from v3 style.badge_id
     const badgeId = userStyle.badge_id;
     if (badgeId) {
       result.badge = {
@@ -821,12 +1188,9 @@ async function load7TVUserStyle(kickUserId) {
       };
     }
 
-    if (result.paint || result.badge) {
-      console.log(`[7TV] ✓ ${kickUserId}:`, result);
-      return result;
-    }
-    return null;
+    return (result.paint || result.paintIsImage || result.badge) ? result : null;
   } catch(e) {
+    console.error('[7TV] Error loading user style:', e);
     return null;
   }
 }
@@ -1026,6 +1390,8 @@ function saveState() {
     localStorage.setItem(getStorageKey('userMeta'), JSON.stringify(userMeta));
     localStorage.setItem(getStorageKey('totalMsgs'), totalMsgs.toString());
     localStorage.setItem(getStorageKey('peakViewers'), peakViewers.toString());
+    localStorage.setItem(getStorageKey('emoteUsage'), JSON.stringify(emoteUsage));
+    localStorage.setItem(getStorageKey('emotesMap'), JSON.stringify(emotesMap));
     localStorage.setItem(getStorageKey('timestamp'), Date.now().toString());
   } catch(e) {
     console.warn('Failed to save state:', e);
@@ -1040,6 +1406,8 @@ function loadState() {
     const savedUserMeta = localStorage.getItem(getStorageKey('userMeta'));
     const savedTotal = localStorage.getItem(getStorageKey('totalMsgs'));
     const savedPeak = localStorage.getItem(getStorageKey('peakViewers'));
+    const savedEmoteUsage = localStorage.getItem(getStorageKey('emoteUsage'));
+    const savedEmotesMap = localStorage.getItem(getStorageKey('emotesMap'));
     const timestamp = localStorage.getItem(getStorageKey('timestamp'));
     
     // Check if saved data is less than 24 hours old
@@ -1064,11 +1432,20 @@ function loadState() {
       totalMsgs = parseInt(savedTotal || '0');
       peakViewers = parseInt(savedPeak || '0');
       
+      // Load emote data
+      if (savedEmoteUsage) {
+        Object.assign(emoteUsage, JSON.parse(savedEmoteUsage));
+      }
+      if (savedEmotesMap) {
+        Object.assign(emotesMap, JSON.parse(savedEmotesMap));
+      }
+      
       document.getElementById('s-total').textContent = totalMsgs.toLocaleString();
       document.getElementById('s-users').textContent = Object.keys(counts).length;
       document.getElementById('s-peak').textContent = peakViewers.toLocaleString();
       
       renderBoard();
+      updateTopEmotes(); // Update emotes display
       return true;
     }
   } catch(e) {
@@ -1085,6 +1462,8 @@ function clearState() {
     localStorage.removeItem(getStorageKey('userMeta'));
     localStorage.removeItem(getStorageKey('totalMsgs'));
     localStorage.removeItem(getStorageKey('peakViewers'));
+    localStorage.removeItem(getStorageKey('emoteUsage'));
+    localStorage.removeItem(getStorageKey('emotesMap'));
     localStorage.removeItem(getStorageKey('timestamp'));
   } catch(e) {
     console.warn('Failed to clear state:', e);
@@ -1168,6 +1547,12 @@ btnGo.addEventListener('click', async () => {
       setupEl.classList.remove('hiding');
       document.getElementById('reset-wrap').style.display='flex';
       document.getElementById('dice-btn-wrap').style.display='flex';
+      document.getElementById('podium-section').style.display='flex';
+      document.getElementById('activity-panels').style.display='flex';
+      
+      // Initialize session start time
+      sessionStartTime = Date.now();
+      
       // Trigger fade-in animation for main app
       setTimeout(() => wrapEl.classList.add('show'), 50);
     }, 400);
@@ -1260,17 +1645,53 @@ function startPusher() {
     const content =data?.content||data?.message||data?.text||'';
     if (!username) return;
     
+    // BLACKLIST: Ignore bot accounts
+    const blacklist = ['kickbot', 'botrix'];
+    if (blacklist.includes(username.toLowerCase())) {
+      return; // Skip processing for blacklisted users
+    }
+    
+    // Debug: log first 3 messages to see data structure
+    if (totalMsgs < 3) {
+      console.log('📩 Message data:', JSON.stringify({
+        sender: sender,
+        username: username,
+        avatar_paths: {
+          'sender.identity.avatar': sender?.identity?.avatar,
+          'sender.identity.profile_pic': sender?.identity?.profile_pic,
+          'sender.profile_pic': sender?.profile_pic,
+          'sender.avatar': sender?.avatar,
+          'data.sender_avatar': data?.sender_avatar
+        }
+      }, null, 2));
+    }
+    
+    // Debug: log message to see format
+    if (totalMsgs < 5) {
+      console.log('📩 Message sample:', { username, content, data });
+    }
+    
     // Extract Kick user ID from message (needed for 7TV API)
     const senderKickId = sender?.id || sender?.user_id || data?.user_id || null;
-    if (senderKickId && !userMeta[username]) console.log(`[7TV] ${username} → kick_id=${senderKickId}`);
+    
+    // Debug counter (used for both Kick ID and Avatar logging)
+    const debugUserCount = Object.keys(userMeta).length;
+    
+    // Debug: Log Kick ID extraction for first 20 unique users
+    if (debugUserCount <= 20) {
+      console.log(`[DEBUG] User: ${username}, Kick ID: ${senderKickId || 'NULL'}`, {
+        'sender.id': sender?.id,
+        'sender.user_id': sender?.user_id,
+        'data.user_id': data?.user_id
+      });
+    }
     
     // Store user metadata (moderator status, avatar, and 7TV paint)
     if (!userMeta[username]) {
-      console.log(`[7TV] Creating userMeta for "${username}" with kick_id=${senderKickId}`);
       userMeta[username] = {
         isMod: false,
         avatar: null,
-        kickId: senderKickId,   // Kick numeric user ID
+        kickUserId: senderKickId, // Kick numeric user ID (consistent naming)
         paint7TV: null,          // 7TV gradient/color CSS value
         paintColor: null,        // 7TV solid fallback color (hex)
         paintIsImage: false,     // true if paint is a GIF/image
@@ -1279,28 +1700,39 @@ function startPusher() {
         kickEmotes: []           // Kick emotes used
       };
       
-      // Load 7TV style (paint + badge) via proxy — only if we have a Kick user ID
+      // Load 7TV style (paint + badge) — only if we have a Kick user ID
       if (senderKickId) {
-        const capturedUsername = username; // Capture username in closure
-        load7TVUserStyle(senderKickId).then(style => {
+        const capturedUsername = username;
+        const capturedKickId = senderKickId;
+        
+        // Load 7TV style
+        load7TVUserStyle(capturedKickId).then(style => {
+          // CRITICAL: Only apply if username still exists AND belongs to same Kick ID
           if (style && userMeta[capturedUsername]) {
-            console.log(`[7TV] Setting data for "${capturedUsername}":`, style);
-            if (style.paint)        userMeta[capturedUsername].paint7TV      = style.paint;
-            if (style.paintColor)   userMeta[capturedUsername].paintColor    = style.paintColor;
-            if (style.paintIsImage) userMeta[capturedUsername].paintIsImage  = style.paintIsImage;
-            if (style.paintImageUrl)userMeta[capturedUsername].paintImageUrl = style.paintImageUrl;
-            if (style.badge)        userMeta[capturedUsername].badge7TV      = style.badge;
-            console.log(`[7TV] userMeta["${capturedUsername}"] after update:`, {
-              paint7TV: userMeta[capturedUsername].paint7TV,
-              paintColor: userMeta[capturedUsername].paintColor,
-              badge7TV: userMeta[capturedUsername].badge7TV ? 'SET' : 'NOT SET'
-            });
-            renderBoard();
-          } else {
-            console.log(`[7TV] NOT setting data for "${capturedUsername}" - style:`, style, 'userMeta exists:', !!userMeta[capturedUsername]);
+            if (userMeta[capturedUsername].kickUserId === capturedKickId) {
+              // Correct user - apply style
+              if (style.paint)        userMeta[capturedUsername].paint7TV      = style.paint;
+              if (style.paintColor)   userMeta[capturedUsername].paintColor    = style.paintColor;
+              if (style.paintIsImage) userMeta[capturedUsername].paintIsImage  = style.paintIsImage;
+              if (style.paintImageUrl)userMeta[capturedUsername].paintImageUrl = style.paintImageUrl;
+              if (style.badge)        userMeta[capturedUsername].badge7TV      = style.badge;
+              
+              console.log(`[7TV] ✓ Style applied to ${capturedUsername}:`, {
+                kickId: capturedKickId,
+                paint: style.paint,
+                paintColor: style.paintColor,
+                badge: style.badge ? style.badge.id : null
+              });
+              renderBoard();
+            } else {
+              // RACE CONDITION DETECTED: The username now belongs to a different user!
+              console.warn(`[7TV] ⚠ Race condition prevented! Style for Kick ID ${capturedKickId} NOT applied to ${capturedUsername} (now has ID ${userMeta[capturedUsername].kickUserId})`);
+            }
+          } else if (!style) {
+            console.log(`[7TV] ℹ No 7TV data for ${capturedUsername} (ID: ${capturedKickId})`);
           }
         }).catch(err => {
-          console.log(`[7TV] Error for "${capturedUsername}":`, err);
+          console.error(`[7TV] ✗ Error loading style for ${capturedUsername}:`, err);
         });
       }
     }
@@ -1326,16 +1758,43 @@ function startPusher() {
       renderBoard(); // Re-render to show mod badge
     }
     
-    // Get profile picture (try multiple possible fields)
-    const avatar = sender?.identity?.avatar || 
-                   sender?.identity?.profile_pic ||
+    // Get profile picture directly from Pusher message (try ALL possible fields)
+    const avatar = sender?.identity?.profile_pic ||
+                   sender?.identity?.avatar || 
                    sender?.profile_pic || 
                    sender?.avatar ||
+                   sender?.user?.profile_pic ||
+                   sender?.user?.avatar ||
+                   data?.sender?.identity?.profile_pic ||
+                   data?.sender?.identity?.avatar ||
+                   data?.sender?.profile_pic ||
+                   data?.sender?.avatar ||
                    data?.sender_avatar ||
+                   data?.avatar ||
+                   data?.profile_pic ||
                    null;
+    
+    // Debug: log avatar extraction for first 20 UNIQUE users (reusing debugUserCount from above)
+    if (debugUserCount <= 20) {
+      console.log(`[AVATAR] User: ${username}, Found: ${avatar ? 'YES ✓' : 'NO ✗'}`, {
+        'sender.identity.profile_pic': sender?.identity?.profile_pic,
+        'sender.identity.avatar': sender?.identity?.avatar,
+        'sender.profile_pic': sender?.profile_pic,
+        'sender.avatar': sender?.avatar,
+        'sender.user.profile_pic': sender?.user?.profile_pic,
+        'data.sender_avatar': data?.sender_avatar,
+        'final_avatar': avatar
+      });
+    }
+    
+    // Always update avatar if we find one (might be better quality)
     if (avatar && !userMeta[username].avatar) {
+      console.log('✓ Avatar găsit pentru', username, ':', avatar);
       userMeta[username].avatar = avatar;
-      console.log('✓ Avatar salvat pentru', username, ':', avatar);
+      renderBoard(); // Re-render to show avatar
+    } else if (avatar && userMeta[username].avatar) {
+      // Update if we got a better quality one
+      userMeta[username].avatar = avatar;
     }
     
     counts[username]=(counts[username]||0)+1;
@@ -1347,6 +1806,43 @@ function startPusher() {
     mpmBuf.push(Date.now());
     document.getElementById('s-total').textContent=totalMsgs.toLocaleString();
     document.getElementById('s-users').textContent=Object.keys(counts).length;
+    
+    // Track emote usage from [emote:ID:NAME] format
+    const emoteMatches = content.match(/\[emote:(\d+):([^\]]+)\]/g);
+    if (emoteMatches) {
+      emoteMatches.forEach(match => {
+        const parts = match.match(/\[emote:(\d+):([^\]]+)\]/);
+        if (parts) {
+          const emoteId = parts[1];
+          const emoteName = parts[2];
+          
+          // Add to emotesMap if not present (for Kick emotes)
+          if (!emotesMap[emoteName]) {
+            emotesMap[emoteName] = {
+              id: emoteId,
+              name: emoteName,
+              url: `https://files.kick.com/emotes/${emoteId}/fullsize`,
+              url2x: `https://files.kick.com/emotes/${emoteId}/fullsize`,
+              url4x: `https://files.kick.com/emotes/${emoteId}/fullsize`,
+              isKick: true
+            };
+          }
+          
+          // Track usage
+          emoteUsage[emoteName] = (emoteUsage[emoteName] || 0) + 1;
+        }
+      });
+    }
+    
+    // Also check for plain emote names (7TV style - space-separated)
+    const words = content.split(/\s+/);
+    words.forEach(word => {
+      // Skip [emote:...] patterns and empty words
+      if (!word.startsWith('[emote:') && word.length > 0 && emotesMap[word]) {
+        emoteUsage[word] = (emoteUsage[word] || 0) + 1;
+      }
+    });
+    
     renderBoard();
   }
 
@@ -1359,9 +1855,212 @@ function updateMpm() {
   const now=Date.now();
   mpmBuf=mpmBuf.filter(t=>t>now-60000);
   document.getElementById('s-mpm').textContent=mpmBuf.length;
+  
+  // Update max messages per second
+  const lastSecond = mpmBuf.filter(t => t > now - 1000).length;
+  if (lastSecond > maxMsgPerSecond) {
+    maxMsgPerSecond = lastSecond;
+  }
 }
 
+// ── Activity Panels ────────────────────────────────
+let lastEmotesSorted = [];
+
+function updateTopEmotes() {
+  const listEl = document.getElementById('top-emotes-list');
+  if (!listEl) return;
+  
+  // Get top 5 emotes
+  const sorted = Object.entries(emoteUsage)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  
+  if (sorted.length === 0) {
+    if (listEl.children.length === 0 || !listEl.querySelector('.empty-state')) {
+      listEl.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Niciun emote folosit încă</div>';
+    }
+    return;
+  }
+  
+  // Check if order changed
+  const sortedString = sorted.map(([name]) => name).join(',');
+  const lastString = lastEmotesSorted.map(([name]) => name).join(',');
+  
+  if (sortedString !== lastString) {
+    // Order changed, recreate list
+    lastEmotesSorted = sorted;
+    listEl.innerHTML = '';
+    
+    sorted.forEach(([emoteName, count], i) => {
+      const emoteData = emotesMap[emoteName];
+      if (!emoteData) return;
+      
+      const itemEl = document.createElement('div');
+      itemEl.className = 'emote-item';
+      itemEl.dataset.emote = emoteName;
+      
+      const rankEl = document.createElement('div');
+      rankEl.className = 'emote-rank';
+      rankEl.textContent = i + 1;
+      
+      const imgEl = document.createElement('img');
+      imgEl.className = 'emote-img';
+      imgEl.src = emoteData.url2x || emoteData.url;
+      imgEl.alt = emoteName;
+      
+      const infoEl = document.createElement('div');
+      infoEl.className = 'emote-info';
+      
+      const nameEl = document.createElement('div');
+      nameEl.className = 'emote-name';
+      nameEl.textContent = emoteName;
+      
+      const countEl = document.createElement('div');
+      countEl.className = 'emote-count';
+      countEl.textContent = count.toLocaleString();
+      
+      infoEl.appendChild(nameEl);
+      itemEl.appendChild(rankEl);
+      itemEl.appendChild(imgEl);
+      itemEl.appendChild(infoEl);
+      itemEl.appendChild(countEl);
+      listEl.appendChild(itemEl);
+    });
+  } else {
+    // Same order, just update counts
+    sorted.forEach(([emoteName, count], i) => {
+      const itemEl = listEl.querySelector(`[data-emote="${emoteName}"]`);
+      if (itemEl) {
+        const countEl = itemEl.querySelector('.emote-count');
+        if (countEl) {
+          countEl.textContent = count.toLocaleString();
+        }
+      }
+    });
+  }
+}
+
+// Update emotes every 3 seconds
+setInterval(() => {
+  updateTopEmotes();
+}, 3000);
+
 // ── Render ─────────────────────────────────────────
+function updatePodium(sorted) {
+  const podiumWrap = document.getElementById('podium-wrap');
+  
+  // Arată podiumul dacă avem cel puțin 1 chatter
+  if (sorted.length >= 1) {
+    podiumWrap.style.display = 'block';
+    document.getElementById('podium-section').style.display = 'flex';
+    
+    // Update pentru fiecare loc 1-3
+    for (let i = 0; i < 3; i++) {
+      const place = i + 1;
+      const entry = sorted[i];
+      
+      if (entry) {
+        const [username, count] = entry;
+        const meta = userMeta[username] || {};
+        
+        // Avatar
+        const avatarEl = document.getElementById(`pod-avatar-${place}`);
+        avatarEl.innerHTML = ''; // Clear content
+        
+        if (meta.avatar) {
+          // Create img tag for profile picture
+          const img = document.createElement('img');
+          img.src = meta.avatar;
+          img.alt = username;
+          img.onerror = function() {
+            // If image fails to load, show initial
+            this.style.display = 'none';
+            avatarEl.style.backgroundColor = hashColor(username);
+            avatarEl.textContent = username.charAt(0).toUpperCase();
+          };
+          avatarEl.appendChild(img);
+          avatarEl.style.backgroundColor = 'transparent';
+        } else {
+          // Show initial letter
+          avatarEl.style.backgroundColor = hashColor(username);
+          avatarEl.textContent = username.charAt(0).toUpperCase();
+        }
+        
+        // Name (clickable) - Apply 7TV paint if available
+        const nameEl = document.getElementById(`pod-name-${place}`);
+        
+        // Build name with badges
+        let nameHTML = username;
+        
+        // Add 7TV badge if user has one
+        if (meta.badge7TV) {
+          nameHTML += ` <img class="badge-7tv-podium" src="${meta.badge7TV.url2x}" alt="${meta.badge7TV.name}" title="7TV: ${meta.badge7TV.name}" onerror="this.src='${meta.badge7TV.url}';this.onerror=null">`;
+        } else if (meta.paint7TV) {
+          nameHTML += ' <span class="seventv-badge-podium">7TV</span>';
+        }
+        
+        nameEl.innerHTML = nameHTML;
+        nameEl.style.cursor = 'pointer';
+        nameEl.style.transition = 'all .2s';
+        
+        // Apply 7TV paint to name
+        if (meta.paintIsImage && meta.paintImageUrl) {
+          nameEl.style.background = `url('${meta.paintImageUrl}') center/cover`;
+          nameEl.style.webkitBackgroundClip = 'text';
+          nameEl.style.webkitTextFillColor = 'transparent';
+          nameEl.style.backgroundClip = 'text';
+        } else if (meta.paint7TV && (meta.paint7TV.startsWith('linear-gradient') || meta.paint7TV.startsWith('radial-gradient'))) {
+          nameEl.style.background = meta.paint7TV;
+          nameEl.style.webkitBackgroundClip = 'text';
+          nameEl.style.webkitTextFillColor = 'transparent';
+          nameEl.style.backgroundClip = 'text';
+          const solidColor = meta.paintColor || meta.paint7TV.match(/rgba?\([\d,\s]+\)/)?.[0] || '#fff';
+          nameEl.style.filter = `drop-shadow(0 0 6px ${solidColor}66)`;
+        } else if (meta.paint7TV) {
+          nameEl.style.color = meta.paint7TV;
+          nameEl.style.textShadow = `0 0 12px ${meta.paint7TV}88`;
+          nameEl.style.background = '';
+          nameEl.style.webkitBackgroundClip = '';
+          nameEl.style.webkitTextFillColor = '';
+        } else {
+          // Reset to default podium colors (gold/silver/bronze)
+          nameEl.style.color = '';
+          nameEl.style.background = '';
+          nameEl.style.textShadow = '';
+          nameEl.style.webkitBackgroundClip = '';
+          nameEl.style.webkitTextFillColor = '';
+          nameEl.style.filter = '';
+        }
+        
+        nameEl.onclick = () => openUserModal(username);
+        nameEl.onmouseenter = function() {
+          this.style.opacity = '0.7';
+          this.style.transform = 'scale(1.05)';
+        };
+        nameEl.onmouseleave = function() {
+          this.style.opacity = '1';
+          this.style.transform = 'scale(1)';
+        };
+        
+        // Count
+        const countEl = document.getElementById(`pod-count-${place}`);
+        countEl.textContent = `${count.toLocaleString()} msg`;
+      } else {
+        // Dacă nu există user pe poziția asta, ascunde-l
+        const avatarEl = document.getElementById(`pod-avatar-${place}`);
+        avatarEl.innerHTML = '';
+        avatarEl.textContent = '—';
+        avatarEl.style.backgroundColor = 'rgba(255,255,255,.05)';
+        
+        document.getElementById(`pod-name-${place}`).textContent = '—';
+        document.getElementById(`pod-count-${place}`).textContent = '0 msg';
+      }
+    }
+  } else {
+    podiumWrap.style.display = 'none';
+  }
+}
+
 function renderBoard() {
   if (renderTid) clearTimeout(renderTid);
   renderTid=setTimeout(_render,120);
@@ -1371,11 +2070,19 @@ function _render() {
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,TOP);
   if (!sorted.length) return;
   emptyEl.style.display='none';
+  
+  // Update podium pentru top 3
+  updatePodium(sorted);
+  
   const maxCount=sorted[0][1];
   boardEl.innerHTML='';
 
   sorted.forEach(([username,count],i)=>{
     const rank=i+1;
+    
+    // Skip top 3 - ei sunt deja în podium
+    if (rank <= 3) return;
+    
     if(rank===4)  appendDivider('── Top 10 ──');
     if(rank===11) appendDivider('── Top 50 ──');
     let rc='rn';
@@ -1394,15 +2101,6 @@ function _render() {
       paintImageUrl: null,
       badge7TV: null
     };
-    
-    // Debug for top 3 users
-    if (i < 3) {
-      console.log(`[Render #${rank}] "${username}" meta:`, {
-        paint7TV: meta.paint7TV,
-        paintColor: meta.paintColor,
-        badge7TV: meta.badge7TV ? 'YES' : 'NO'
-      });
-    }
     
     // Solid color for avatar bg (use paintColor if available, never use gradient/url as bg)
     const solidColor = meta.paintColor || (!meta.paintIsImage && meta.paint7TV && !meta.paint7TV.includes('gradient') ? meta.paint7TV : null) || hashColor(username);
@@ -1426,10 +2124,19 @@ function _render() {
     } else if (meta.paint7TV && (meta.paint7TV.startsWith('linear-gradient') || meta.paint7TV.startsWith('radial-gradient'))) {
       usernameStyle = ` style="background:${meta.paint7TV};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 6px ${solidColor}66)"`;
     } else if (meta.paint7TV) {
-      console.log(`[Render] Applying color paint to ${username}:`, meta.paint7TV);
       usernameStyle = ` style="color:${meta.paint7TV};text-shadow:0 0 8px ${meta.paint7TV}88"`;
     } else {
       usernameStyle = ` style="color:#ddeedd"`;
+    }
+    
+    // Debug: Log what we're applying (only for top 5)
+    if (rank <= 5 && meta.paint7TV) {
+      console.log(`[RENDER] ${username} (rank ${rank}):`, {
+        paint7TV: meta.paint7TV,
+        paintColor: meta.paintColor,
+        badge7TV: meta.badge7TV ? 'YES' : 'NO',
+        appliedStyle: usernameStyle
+      });
     }
     
     // Avatar HTML - use profile pic if available, otherwise colored circle with initial
@@ -1595,19 +2302,7 @@ function openUserModal(username) {
 
   const nameEl = document.getElementById('user-header-name');
   
-  // Apply paint to name
-  if (meta.paintIsImage && meta.paintImageUrl) {
-    nameEl.style.cssText = `background:url('${meta.paintImageUrl}') center/cover;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
-    nameEl.textContent = username;
-  } else if (meta.paint7TV && (meta.paint7TV.startsWith('linear-gradient') || meta.paint7TV.startsWith('radial-gradient'))) {
-    nameEl.style.cssText = `background:${meta.paint7TV};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
-    nameEl.textContent = username;
-  } else {
-    nameEl.style.cssText = `color:${color}`;
-    nameEl.textContent = username;
-  }
-  
-  // Build badges HTML
+  // Build badges HTML first
   let badgesHtml = '';
   
   // Add moderator badge if applicable
@@ -1622,7 +2317,19 @@ function openUserModal(username) {
     badgesHtml += ' <span class="seventv-badge" title="7TV Subscriber" style="margin-left:6px">7TV</span>';
   }
   
+  // Set HTML with username and badges
   nameEl.innerHTML = esc(username) + badgesHtml;
+  
+  // Apply paint to name AFTER setting innerHTML
+  if (meta.paintIsImage && meta.paintImageUrl) {
+    nameEl.style.cssText = `background:url('${meta.paintImageUrl}') center/cover;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
+  } else if (meta.paint7TV && (meta.paint7TV.startsWith('linear-gradient') || meta.paint7TV.startsWith('radial-gradient'))) {
+    nameEl.style.cssText = `background:${meta.paint7TV};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
+  } else if (meta.paint7TV) {
+    nameEl.style.cssText = `color:${meta.paint7TV};text-shadow:0 0 8px ${meta.paint7TV}88`;
+  } else {
+    nameEl.style.cssText = `color:${color}`;
+  }
 
   document.getElementById('user-header-stats').textContent =
     count.toLocaleString() + ' mesaje totale' +
@@ -1667,42 +2374,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUserMod
 // ══════════════════════════════════════════════════
 // 7TV DEBUG PANEL
 // ══════════════════════════════════════════════════
-const _dpEntries = document.getElementById('dp-entries');
-const _dpStatus  = document.getElementById('dp-status');
-let   _dpLog     = [];
-
-function debugLog7TV(kickId, rawData, result) {
-  _dpLog.unshift({ kickId, rawData, result, ts: new Date().toLocaleTimeString() });
-  if (_dpLog.length > 20) _dpLog.pop();
-  _dpStatus.textContent = `${_dpLog.length} users checked`;
-  _dpEntries.innerHTML = _dpLog.map(e => {
-    const raw = JSON.stringify(e.rawData || {}).substring(0, 400);
-    const res = JSON.stringify(e.result);
-    const ok  = e.result ? '✅' : '❌';
-    return `<div class="drow">
-      <span class="dlabel">${e.ts} — KickID: ${e.kickId} ${ok}</span>
-      <span>${raw}</span><br>
-      <span style="color:${e.result?'#0f0':'#f55'}">${res}</span>
-    </div>`;
-  }).join('');
-}
-
-// Intercept load7TVUserStyle to populate debug panel
-const _orig7TVStyle = load7TVUserStyle;
-load7TVUserStyle = async function(kickId) {
-  const result = await _orig7TVStyle(kickId);
-  // Also fetch for debug display (7TV has CORS, fetch is fine)
-  try {
-    // For debug: just show the v3 response (has 7TV user ID)
-    const r = await fetch(`https://7tv.io/v3/users/kick/${encodeURIComponent(kickId)}`, { headers:{'Accept':'application/json'} });
-    const raw = r.ok ? { seventvId: (await r.json())?.user?.id, status: r.status } : { httpStatus: r.status, notOn7TV: r.status === 404 };
-    debugLog7TV(kickId, raw, result);
-  } catch(e) {
-    debugLog7TV(kickId, { error: e.message }, result);
-  }
-  return result;
-};
-
 // DICE LOGIC
 // ══════════════════════════════════════════════════
 const modal       = document.getElementById('dice-modal');
