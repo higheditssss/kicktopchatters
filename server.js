@@ -63,11 +63,12 @@ const server = http.createServer(async (req, res) => {
         data = await fetchJson(`https://kick.com/api/v1/channels/${encodeURIComponent(user)}`);
       }
 
-      const chatroomId = data?.chatroom?.id;
-      const isLive     = !!(data?.livestream);
-      const title      = data?.livestream?.session_title || null;
-      const viewers    = data?.livestream?.viewer_count || 0;
-      const avatar     = data?.user?.profile_pic || null;
+      const chatroomId  = data?.chatroom?.id;
+      const isLive      = !!(data?.livestream);
+      const title       = data?.livestream?.session_title || null;
+      const viewers     = data?.livestream?.viewer_count || 0;
+      const avatar      = data?.user?.profile_pic || null;
+      const kickUserId  = data?.user?.id || null;
 
       if (!chatroomId) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -76,7 +77,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ chatroomId, isLive, title, viewers, avatar }));
+      res.end(JSON.stringify({ chatroomId, isLive, title, viewers, avatar, kickUserId }));
     } catch (e) {
       res.writeHead(502, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: e.message }));
